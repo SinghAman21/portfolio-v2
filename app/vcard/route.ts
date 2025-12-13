@@ -2,18 +2,18 @@ import { NextResponse } from "next/server";
 import VCard from "vcard-creator";
 import { Experience } from "@/lib/data";
 
-const baseUrl = "https://avikmukherjee.me";
+const baseUrl = "https://useraman.me";
 
 // User information matching the portfolio
 const userInfo = {
-  firstName: "Avik",
-  lastName: "Mukherjee",
-  email: "useraman21@gmail.com",
-  address: "Hyderabad, India",
+  firstName: "Aman",
+  lastName: "Singh",
+  email: "work.singhaman@gmail.com",
+  address: "Mumbai, India",
   website: baseUrl,
   // Use PNG image as vCard only supports JPEG, PNG, and GIF (not WebP)
   avatar: `${baseUrl}/my-favicon/web-app-manifest-512x512.png`,
-  username: "avikmukherjee",
+  username: "singhaman21",
 };
 
 export const dynamic = "force-static";

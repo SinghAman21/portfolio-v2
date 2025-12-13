@@ -21,7 +21,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
       openGraph: {
         title: `${post.title} | Aman Singh`,
         description: post.excerpt,
-        url: `https://www.avikmukherjee.me/blog/${slug}`,
+        url: `https://www.AmanSingh.me/blog/${slug}`,
         images: ["/og-image.jpg"],
         siteName: "Aman Singh",
         locale: "en_US",

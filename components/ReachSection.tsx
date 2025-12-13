@@ -20,11 +20,11 @@ export default function ReachSection({ animationDelay = '1.2s' }: ReachSectionPr
             GitHub
           </Anchor>
           <span className="mx-1 text-gray-400 dark:text-neutral-400/50 transition-opacity duration-200">·</span>
-          <Anchor href="https://www.linkedin.com/in/avik-mukherjee-8ab9911bb/" target="_blank" className="transition-all duration-200 hover:opacity-70 hover:scale-105 inline-block">
+          <Anchor href="https://www.linkedin.com/in/Aman-Singh-8ab9911bb/" target="_blank" className="transition-all duration-200 hover:opacity-70 hover:scale-105 inline-block">
             LinkedIn
           </Anchor>
           <span className="mx-1 text-gray-400 dark:text-neutral-400/50 transition-opacity duration-200">·</span>
-          <Anchor href="https://peerlist.io/avikmukherjee/" target="_blank" className="transition-all duration-200 hover:opacity-70 hover:scale-105 inline-block">
+          <Anchor href="https://peerlist.io/AmanSingh/" target="_blank" className="transition-all duration-200 hover:opacity-70 hover:scale-105 inline-block">
             Peerlist
           </Anchor>
           <span className="mx-1 text-gray-400 dark:text-neutral-400/50 transition-opacity duration-200">·</span>
@@ -34,8 +34,8 @@ export default function ReachSection({ animationDelay = '1.2s' }: ReachSectionPr
         </span>
         <span className="text-gray-700 dark:text-neutral-400">
           — or send me an email at{" "}
-          <Anchor href="mailto:useraman21@gmail.com" target="_blank" className="transition-all duration-200 hover:opacity-70 hover:underline underline-offset-2">
-            singhaman21@proton.me
+          <Anchor href="mailto:work.singhaman@gmail.com" target="_blank" className="transition-all duration-200 hover:opacity-70 hover:underline underline-offset-2">
+            work.singhaman@gmail.com
           </Anchor>
         </span>
       </div>

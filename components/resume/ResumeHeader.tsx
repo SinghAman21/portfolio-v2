@@ -11,13 +11,13 @@ export default function ResumeHeader() {
       </h1>
       <div className="space-y-2 text-gray-600 dark:text-neutral-400">
         <p>
-          Hyderabad |{" "}
+          Mumbai |{" "}
 
           <Link
-            href="mailto:useraman21@gmail.com"
+            href="mailto:work.singhaman@gmail.com"
             className="text-gray-700 dark:text-stone-300 underline decoration-gray-500 dark:decoration-stone-400 decoration-[0.5px] underline-offset-4 transition-colors hover:text-gray-900 dark:hover:text-stone-200"
           >
-            useraman21@gmail.com
+            work.singhaman@gmail.com
           </Link>
         </p>
         <div className="flex flex-wrap gap-4 justify-center">
@@ -33,7 +33,7 @@ export default function ResumeHeader() {
           </span>
           <span>
             <Link
-              href="https://avikmukherjee.me"
+              href="https://useraman.me"
               target="_blank"
               className="text-gray-700 dark:text-stone-300 underline decoration-gray-500 dark:decoration-stone-400 decoration-[0.5px] underline-offset-4 transition-colors hover:text-gray-900 dark:hover:text-stone-200 flex items-center gap-1"
             >
@@ -43,7 +43,7 @@ export default function ResumeHeader() {
           </span>
           <span>
             <Link
-              href="https://www.linkedin.com/in/avik-mukherjee-8ab9911bb/"
+              href="https://www.linkedin.com/in/aman-singh21/"
               target="_blank"
               className="text-gray-700 dark:text-stone-300 underline decoration-gray-500 dark:decoration-stone-400 decoration-[0.5px] underline-offset-4 transition-colors hover:text-gray-900 dark:hover:text-stone-200 flex items-center gap-1"
             >
@@ -53,7 +53,7 @@ export default function ResumeHeader() {
           </span>
           <span>
             <Link
-              href="https://peerlist.io/avikmukherjee/"
+              href="https://peerlist.io/singhaman21/"
               target="_blank"
               className="text-gray-700 dark:text-stone-300 underline decoration-gray-500 dark:decoration-stone-400 decoration-[0.5px] underline-offset-4 transition-colors hover:text-gray-900 dark:hover:text-stone-200 flex items-center gap-1"
             >

@@ -147,7 +147,7 @@ function generateRSSFeed(posts: Post[], blogUrl: string, portfolioUrl: string): 
 </rss>`;
 }
 
-const baseUrl = "https://avikmukherjee.me";
+const baseUrl = "https://useraman.me";
 
 export const GET = async () => {
   const posts = await getAllPosts();

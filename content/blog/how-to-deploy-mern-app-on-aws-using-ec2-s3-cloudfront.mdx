@@ -1,0 +1,316 @@
+---
+title: "How to Deploy a MERN App on AWS"
+publishDate: "21 Oct 2025"
+slug: "how-to-deploy-mern-app-on-aws-using-ec2-s3-cloudfront"
+description: "Complete guide to deploying a full-stack MERN application using AWS EC2, S3, and CloudFront."
+tags: ["aws","deployment","mern"]
+---
+
+## Introduction
+
+I was working on a product that ran smoothly in local development mode, then realized I needed to deploy it on AWS. The fun part? I'd never used AWS before, so I had to figure everything out myself.
+
+The project was a monorepo with two folders:
+- **Frontend (FE):** ReactJS
+- **Backend (BE):** ExpressJS
+
+For deployment, I used AWS services: **EC2**, **S3**, **CloudFront**, and **Certificate Manager**. Let's start with the backend deployment.
+
+## Backend Deployment
+
+### Hosting it Live 24/7
+
+#### 1. Create and Connect to an EC2 Instance
+
+Create an EC2 instance and customize according to your needs (I prefer Ubuntu). Sign in to the instance terminal via SSH (EC2 Instance Connect is easiest).
+
+#### 2. Install Node.js via NVM
+
+```bash
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
+source ~/.bashrc
+nvm install --lts
+sudo apt update && sudo apt install node
+node -v && npm -v
+```
+
+#### 3. Setup Environment Variables
+
+Clone your repo and configure the `.env` file at the top of your `index.ts`:
+
+```typescript
+import dotenv from "dotenv";
+import path from 'path'; 
+
+dotenv.config({ path: path.resolve(__dirname, '../.env') });
+
+// After compiling, index.ts goes to dist/index.js
+// So we need to point to the parent directory for .env
+```
+
+#### 4. Setup Database and Build
+
+If you're using Prisma ORM, generate schema and migrations:
+
+```bash
+npx prisma generate
+npx prisma migrate deploy
+pnpm run build  # or npm run build
+```
+
+#### 5. Setup PM2 for 24/7 Running
+
+Install PM2 globally to keep your app running:
+
+```bash
+npm i pm2 -g
+pm2 start index.js --name your-app-name
+pm2 startup
+pm2 save
+```
+
+Copy and run the output from `pm2 startup`:
+
+```bash
+sudo env PATH=$PATH:/usr/bin pm2 startup systemd -u ubuntu --hp /home/ubuntu
+```
+
+Check if everything is working:
+
+```bash
+pm2 list
+pm2 log your-app-name
+sudo reboot  # Test persistence
+pm2 list     # Should show your app running
+```
+
+To restart with updated environment variables:
+
+```bash
+pm2 restart your-app-name --update-env
+```
+
+Your backend is now accessible at `<public-ip>:3000`.
+
+### Hosting on Port 80 (HTTP)
+
+#### 1. Install and Configure Nginx
+
+Install Nginx as a reverse proxy:
+
+```bash
+sudo apt update && sudo apt install nginx
+```
+
+Configure Nginx:
+
+```bash
+sudo nano /etc/nginx/nginx.conf
+```
+
+Add this configuration:
+
+```nginx
+events {
+  worker_connections 1024;
+}
+
+http {
+  server {
+    listen 80;
+    server_name your-domain.com www.your-domain.com;
+
+    location / {
+      proxy_pass http://localhost:3000;
+      proxy_http_version 1.1;
+      proxy_set_header Upgrade $http_upgrade;
+      proxy_set_header Connection 'upgrade';
+      proxy_set_header Host $host;
+      proxy_cache_bypass $http_upgrade;
+
+      # Proxy timeouts and buffering
+      proxy_read_timeout 90;
+      proxy_buffering on;
+      proxy_buffers 8 16k;
+      proxy_buffer_size 16k;
+    }
+
+    access_log /var/log/nginx/app_access.log;
+    error_log /var/log/nginx/app_error.log warn;
+  }
+}
+```
+
+#### 2. Test and Enable Nginx
+
+```bash
+sudo nginx -t
+# Expected output: syntax ok, test successful
+
+sudo systemctl reload nginx
+sudo systemctl enable nginx  # Auto-start on boot
+sudo systemctl status nginx
+```
+
+Your backend is now accessible at `<your-domain.com>` (port 80).
+
+### Securing with HTTPS (Port 443)
+
+#### 1. Setup Domain and DNS
+
+- Buy a domain (refer to [tld-list](https://tld-list.com) for best rates)
+- Create an **A record** in your DNS settings pointing to your EC2 instance's public IPv4 address
+- Wait for DNS propagation (can take some time)
+
+#### 2. Install and Run Certbot
+
+```bash
+sudo apt update && sudo apt install certbot python3-certbot-nginx -y
+sudo certbot --nginx -d api.your-domain.com
+```
+
+#### 3. Verify Configuration
+
+Certbot automatically updates your `nginx.conf`. Verify and reload:
+
+```bash
+sudo nginx -t
+sudo systemctl reload nginx
+```
+
+Your final `nginx.conf` will include SSL certificates managed by Certbot:
+
+```nginx
+events {
+  worker_connections 1024;
+}
+
+http {
+  server {
+    server_name api.your-domain.com;
+
+    location /.well-known/acme-challenge/ {
+      root /var/www/html/;
+      allow all;
+    }
+
+    location / {
+      proxy_pass http://localhost:3000;
+      proxy_http_version 1.1;
+      proxy_set_header Upgrade $http_upgrade;
+      proxy_set_header Connection 'upgrade';
+      proxy_set_header Host $host;
+      proxy_cache_bypass $http_upgrade;
+
+      proxy_read_timeout 90;
+      proxy_buffering on;
+      proxy_buffers 8 16k;
+      proxy_buffer_size 16k;
+    }
+
+    access_log /var/log/nginx/api_access.log;
+    error_log /var/log/nginx/api_error.log warn;
+    
+    listen 443 ssl;
+    ssl_certificate /etc/letsencrypt/live/api.your-domain.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/api.your-domain.com/privkey.pem;
+    include /etc/letsencrypt/options-ssl-nginx.conf;
+    ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
+  }
+
+  server {
+    if ($host = api.your-domain.com) {
+      return 301 https://$host$request_uri;
+    }
+
+    listen 80;
+    server_name api.your-domain.com;
+    return 404;
+  }
+}
+```
+
+Your backend is now secured with HTTPS at `https://api.your-domain.com`.
+
+## Frontend Deployment
+
+### Building the React App
+
+#### 1. Build with Environment Variables
+
+Compile your React app with environment variables:
+
+```bash
+REACT_APP_VITE_BACKEND_URL=https://api.your-domain.com \
+REACT_APP_GEMINI_API=https://api.gemini.com \
+REACT_APP_RESEND_API=https://api.resend.com \
+pnpm run build
+```
+
+Or using `.env.production`:
+
+```bash
+REACT_APP_VITE_BACKEND_URL=https://api.your-domain.com pnpm run build
+```
+
+### S3 Bucket Setup
+
+#### 1. Create and Configure S3 Bucket
+
+- Create a new S3 bucket
+- Upload the contents of the `dist` folder (not the folder itself)
+- Go to **Properties** → scroll down → enable **Static website hosting** and set `index.html` as the root element
+
+#### 2. Set Permissions and Bucket Policy
+
+- Go to **Permissions** → block all public access (CloudFront will handle access)
+- Create a **Bucket Policy**:
+
+```json
+{
+  "Version": "2008-10-17",
+  "Id": "PolicyForCloudFrontPrivateContent",
+  "Statement": [
+    {
+      "Sid": "AllowCloudFrontServicePrincipal",
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "cloudfront.amazonaws.com"
+      },
+      "Action": "s3:GetObject",
+      "Resource": "arn:aws:s3:::your-bucket-name/*",
+      "Condition": {
+        "StringEquals": {
+          "AWS:SourceArn": "arn:aws:cloudfront::ACCOUNT-ID/DISTRIBUTION-ID"
+        }
+      }
+    }
+  ]
+}
+```
+
+### CloudFront Distribution Setup
+
+#### 1. Create Distribution
+
+- Select your S3 bucket as the origin
+- Enable **Use Bucket Endpoint**
+- Keep default settings or customize as needed
+
+#### 2. Add Origins and Domains
+
+- Add your EC2 instance as another origin (if serving both static and API routes)
+- Copy the CloudFront domain name to use in your `nginx.conf`
+- Add your custom domain in **Alternate Domain Names** (self-explanatory setup)
+
+Your frontend is now deployed and cached globally via CloudFront.
+
+## Summary
+
+You've successfully deployed a full-stack MERN application on AWS:
+
+- **Backend:** EC2 + Nginx + Let's Encrypt SSL
+- **Frontend:** S3 + CloudFront CDN
+- **Security:** HTTPS enabled on both services
+
+Don't worry if it takes a few attempts—there's a lot to configure! Take your time and follow each step carefully.

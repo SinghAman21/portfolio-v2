@@ -1,3 +1,6 @@
 - About
 - techstack
 - urls
+- recheck (llms)
+- og images
+- create a keyboard control cmd+k then a b c for others etc

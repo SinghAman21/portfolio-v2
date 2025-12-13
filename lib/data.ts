@@ -20,7 +20,7 @@ export const projects = [
     year: "2025",
     description:
       "It is a powerful, privacy-focused web analytics platform that helps you to visualize the website's reach. Built it due to Vercel Analytics Quota exhaustion.",
-    demoUrl: "https://webtracker.avikmukherjee.me",
+    demoUrl: "https://webtracker.AmanSingh.me",
     githubUrl: "https://github.com/SinghAman21/webtracker",
   },
   {
@@ -28,7 +28,7 @@ export const projects = [
     year: "2025",
     description:
       "PeerShare is a secure peer-to-peer file sharing and video calling app built with Next.js and WebRTC. It enables real-time chat, HD video calls, and unlimited file transfers without storing any data on servers.",
-    demoUrl: "https://peershare.avikmukherjee.me",
+    demoUrl: "https://peershare.AmanSingh.me",
     githubUrl: "https://github.com/SinghAman21/peerFileShare",
   },
   {
@@ -36,7 +36,7 @@ export const projects = [
     year: "2025",
     description:
       "It is a Chess game built with NextJS and AI SDK. In here the user can play against AI and can improve their skills. Built it because I suck at Chess.",
-    demoUrl: "https://chess.avikmukherjee.me/",
+    demoUrl: "https://chess.AmanSingh.me/",
     githubUrl: "https://github.com/SinghAman21/chess",
   },
   {

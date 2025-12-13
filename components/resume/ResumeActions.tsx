@@ -14,11 +14,12 @@ export default function ResumeActions() {
     }, 100);
   };
 
-  const resumeUrl =
-    "https://docs.google.com/document/d/1KZ0hvzUtQV_F0gGc8Bw6j5E-RsyaFhx6OXhyzdu_r5Y/edit?usp=sharing";
+  const resumeUrl =""
+    // "https://docs.google.com/document/d/1KZ0hvzUtQV_F0gGc8Bw6j5E-RsyaFhx6OXhyzdu_r5Y/edit?usp=sharing";
 
   const handleDownload = () => {
-    window.open(resumeUrl, "_blank");
+    // window.open(resumeUrl, "_blank");
+  window.location.href = "/api/download/resume";
   };
 
   return (
@@ -44,10 +45,10 @@ export default function ResumeActions() {
             className="flex items-center gap-2 px-4 py-2 bg-gray-200 dark:bg-neutral-800 hover:bg-gray-300 dark:hover:bg-neutral-700 text-gray-800 dark:text-neutral-200 rounded-lg transition-colors"
           >
             <DownloadIcon className="w-4 h-4" />
-            Download Google Docs Version
+            Download PDF Version
           </button>
           <p className="text-xs text-gray-600 dark:text-neutral-500 mt-1">
-            Download Google Docs Version
+            Download PDF Version
           </p>
         </div>
       </div>

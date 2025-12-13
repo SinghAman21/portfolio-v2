@@ -3,11 +3,11 @@ import type { MetadataRoute } from "next";
 export default function manifest(): MetadataRoute.Manifest {
 	return {
 		name: "Aman Singh",
-		short_name: "Avik",
+		short_name: "Aman",
 		description:
 			"Full-stack software developer specializing in Next.js, React, and TypeScript. Portfolio, projects, and writing by Aman Singh",
 		start_url: "/",
-		id: "com.avikmukherjee",
+		id: "com.AmanSingh",
 		display: "standalone",
 		background_color: "#ffffff",
 		theme_color: "#000000",

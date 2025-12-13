@@ -80,6 +80,9 @@ importers:
       tailwind-merge:
         specifier: ^3.4.0
         version: 3.4.0
+      vcard-creator:
+        specifier: ^0.7.2
+        version: 0.7.2
     devDependencies:
       '@eslint/eslintrc':
         specifier: ^3.3.3
@@ -2576,6 +2579,9 @@ packages:
 
   uri-js@4.4.1:
     resolution: {integrity: sha512-7rKUyy33Q1yc98pQ1DAmLtwX109F7TIfWlW1Ydo8Wl1ii1SeHieeh0HHfPeL2fMXK6z0s8ecKs9frCuLJvndBg==}
+
+  vcard-creator@0.7.2:
+    resolution: {integrity: sha512-DiZpZqie2aPoRec5bPO3WmXy/+Yh1Dl01Go5VyDnn5iV2KhN6d3S16yZoGz9iq27U6l+o6m68Ub8JQz8TnbNYA==}
 
   vfile-location@5.0.3:
     resolution: {integrity: sha512-5yXvWDEgqeiYiBe1lbxYF7UMAIm/IcopxMHrMQDq3nvKcjPKIhZklUKL+AE7J7uApI4kwe2snsK+eI6UTj9EHg==}
@@ -5751,6 +5757,8 @@ snapshots:
   uri-js@4.4.1:
     dependencies:
       punycode: 2.3.1
+
+  vcard-creator@0.7.2: {}
 
   vfile-location@5.0.3:
     dependencies:

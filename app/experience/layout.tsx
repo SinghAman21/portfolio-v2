@@ -9,7 +9,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Experience — Professional Work History of Aman Singh",
     description: "Professional experience of Aman Singh as a software engineer at SuperAlign AI, DataFoundry, Dank, and more. Full-stack development roles and achievements.",
-    url: "https://www.avikmukherjee.me/experience",
+    url: "https://www.AmanSingh.me/experience",
     images: ["/og-image.webp"],
     siteName: "Aman Singh",
     locale: "en_US",
@@ -33,7 +33,7 @@ export const metadata: Metadata = {
     },
   },
   alternates: {
-    canonical: "https://www.avikmukherjee.me/experience",
+    canonical: "https://www.AmanSingh.me/experience",
   },
 };
 export default function HomeLayout({ children }: PropsWithChildren) {

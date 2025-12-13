@@ -3,7 +3,7 @@ import { getAllExperimentSlugs } from "@/lib/experiments-data";
 import type { MetadataRoute } from "next";
 
 // Use the deployed site origin so sitemap URLs match the host serving the file
-export const baseUrl = "https://avikmukherjee.me";
+export const baseUrl = "https://AmanSingh.me";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const posts = await getAllPosts();

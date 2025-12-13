@@ -15,7 +15,7 @@ const instrumentSerif = Instrument_Serif({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://www.avikmukherjee.me/"),
+  metadataBase: new URL("https://www.AmanSingh.me/"),
   title: {
     template: "%s | Aman Singh",
     default: "Aman Singh",
@@ -32,8 +32,8 @@ export const metadata: Metadata = {
     "typescript",
     "full stack",
     "full-stack",
-    "Avik",
-    "Mukherjee",
+    "Aman",
+    "Singh",
     "Aman Singh",
     "portfolio",
     "projects",
@@ -43,7 +43,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Aman Singh — Full-Stack Web Developer & Software Engineer",
     description: "Aman Singh is a full-stack software developer specializing in Next.js, React, TypeScript, and Node.js. Explore projects, experience, and technical writing.",
-    url: "https://www.avikmukherjee.me/",
+    url: "https://www.AmanSingh.me/",
     siteName: "Aman Singh's Portfolio",
     images: [
       {
@@ -148,7 +148,7 @@ export default function RootLayout({
   return (
     <html lang="en" className={instrumentSerif.variable}>
       <head>
-        <meta name="apple-mobile-web-app-title" content="Avik" />
+        <meta name="apple-mobile-web-app-title" content="Aman" />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
@@ -156,13 +156,13 @@ export default function RootLayout({
               "@context": "https://schema.org",
               "@type": "Person",
               name: "Aman Singh",
-              url: "https://www.avikmukherjee.me",
-              image: "https://www.avikmukherjee.me/og-image.webp",
+              url: "https://www.AmanSingh.me",
+              image: "https://www.AmanSingh.me/og-image.webp",
               sameAs: [
                 "https://x.com/useraman21",
                 "https://github.com/SinghAman21",
-                "https://www.linkedin.com/in/avik-mukherjee-8ab9911bb/",
-                "https://peerlist.io/avikmukherjee/",
+                "https://www.linkedin.com/in/Aman-Singh-8ab9911bb/",
+                "https://peerlist.io/AmanSingh/",
               ],
               jobTitle: "Full-Stack Software Developer",
               worksFor: {
@@ -185,8 +185,8 @@ export default function RootLayout({
         />
         <Script
           defer
-          data-domain="avikmukherjee.me"
-          src="https://webtracker.avikmukherjee.me/tracking-script.js"
+          data-domain="AmanSingh.me"
+          src="https://webtracker.AmanSingh.me/tracking-script.js"
         />
       </head>
       <body

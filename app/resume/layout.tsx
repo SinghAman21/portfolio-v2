@@ -10,7 +10,7 @@ export const metadata = {
     title: 'Resume — Aman Singh, Full-Stack Software Developer',
     description: 'Download or view the professional resume of Aman Singh. Skills in Next.js, React, TypeScript, Node.js, and full-stack web development. Based in India.',
     images: ['/og-image.webp'],
-    url: 'https://avikmukherjee.me/resume',
+    url: 'https://AmanSingh.me/resume',
   },
   twitter: {
     title: 'Resume — Aman Singh, Full-Stack Software Developer',
@@ -18,7 +18,7 @@ export const metadata = {
     images: ['/og-image.webp'],
   },
   alternates: {
-    canonical: 'https://avikmukherjee.me/resume',
+    canonical: 'https://AmanSingh.me/resume',
   },
   robots: {
     index: true,
