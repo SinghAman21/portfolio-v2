@@ -1,0 +1,77 @@
+/* Keep the existing blog-content styles and update the token colors */
+
+.token.comment,
+.token.prolog,
+.token.doctype,
+.token.cdata {
+  color: #7c7c7c;
+}
+
+.token.punctuation {
+  color: #7ee787;
+}
+
+.token.property,
+.token.tag,
+.token.boolean,
+.token.number,
+.token.constant,
+.token.symbol,
+.token.deleted {
+  color: #ff7b72;
+}
+
+.token.selector,
+.token.attr-name,
+.token.string,
+.token.char,
+.token.builtin,
+.token.inserted {
+  color: #a5d6ff;
+}
+
+.token.operator,
+.token.entity,
+.token.url,
+.language-css .token.string,
+.style .token.string {
+  color: #ff79c6;
+}
+
+.token.atrule,
+.token.attr-value,
+.token.keyword {
+  color: #f47067;
+}
+
+.token.function,
+.token.class-name {
+  color: #d2a8ff;
+}
+
+.token.regex,
+.token.important,
+.token.variable {
+  color: #ffa657;
+}
+
+/* Additional syntax colors */
+.token.parameter {
+  color: #79c0ff;
+}
+
+.token.property-access {
+  color: #a5d6ff;
+}
+
+.token.console {
+  color: #79c0ff;
+}
+
+.token.dom {
+  color: #ff7b72;
+}
+
+.token.operator {
+  color: #ff79c6;
+}

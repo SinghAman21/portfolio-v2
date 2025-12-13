@@ -1,0 +1,559 @@
+@import 'tailwindcss';
+
+
+
+
+@theme {
+  --breakpoint-2xl: 768px;
+
+  --color-border: hsl(var(--border));
+  --color-input: hsl(var(--input));
+  --color-ring: hsl(var(--ring));
+  --color-background: hsl(var(--background));
+  --color-foreground: hsl(var(--foreground));
+
+  --color-primary: hsl(var(--primary));
+  --color-primary-foreground: hsl(var(--primary-foreground));
+
+  --color-secondary: hsl(var(--secondary));
+  --color-secondary-foreground: hsl(var(--secondary-foreground));
+
+  --color-destructive: hsl(var(--destructive));
+  --color-destructive-foreground: hsl(var(--destructive-foreground));
+
+  --color-muted: hsl(var(--muted));
+  --color-muted-foreground: hsl(var(--muted-foreground));
+
+  --color-accent: hsl(var(--accent));
+  --color-accent-foreground: hsl(var(--accent-foreground));
+
+  --color-popover: hsl(var(--popover));
+  --color-popover-foreground: hsl(var(--popover-foreground));
+
+  --color-card: hsl(var(--card));
+  --color-card-foreground: hsl(var(--card-foreground));
+
+  --font-sans: var(--font-sans), ui-sans-serif, system-ui, sans-serif,
+    'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+
+  --animate-accordion-down: accordion-down 0.2s ease-out;
+  --animate-accordion-up: accordion-up 0.2s ease-out;
+  --animate-slide-fade-up: slideFadeUp 150ms ease-in;
+
+  @keyframes accordion-down {
+    from {
+      height: 0;
+    }
+
+    to {
+      height: var(--radix-accordion-content-height);
+    }
+  }
+
+  @keyframes accordion-up {
+    from {
+      height: var(--radix-accordion-content-height);
+    }
+
+    to {
+      height: 0;
+    }
+  }
+
+  @keyframes slideFadeUp {
+    0% {
+      transform: translateY(4px);
+      opacity: 0;
+    }
+
+    100% {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+}
+
+@utility container {
+  margin-inline: auto;
+  padding-inline: 1rem;
+
+  @media (width >=theme(--breakpoint-2xl)) {
+    max-width: none;
+  }
+
+  @media (width >=768px) {
+    max-width: 768px;
+  }
+}
+
+/*
+  The default border color has changed to `currentColor` in Tailwind CSS v4,
+  so we've added these compatibility styles to make sure everything still
+  looks the same as it did with Tailwind CSS v3.
+
+  If we ever want to remove these styles, we need to add an explicit border
+  color utility to any element that depends on these defaults.
+*/
+@layer base {
+
+  *,
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    border-color: var(--color-gray-200, currentColor);
+  }
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+  --font-serif: var(--font-instrument-serif), ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
+}
+
+/* Light mode syntax highlighting */
+:root {
+  --background: #ffffff;
+  --foreground: #1a1a1a;
+  --sh-class: #0969da;
+  /* Dark blue for classes */
+  --sh-identifier: #24292f;
+  /* Dark gray for identifiers */
+  --sh-keyword: #cf222e;
+  /* Dark red for keywords */
+  --sh-string: #0a3069;
+  /* Dark blue for strings */
+  --sh-sign: #6f42c1;
+  /* Purple for punctuation/symbols */
+  --sh-comment: #6e7781;
+  /* Medium gray for comments */
+  --sh-jsxliterals: #8250df;
+  /* Purple for JSX literals */
+  --sh-property: #d73a49;
+  /* Red for properties */
+  --sh-variable: #005cc5;
+  /* Blue for variables */
+  --sh-function: #6f42c1;
+  /* Purple for functions */
+  --sh-number: #005cc5;
+  /* Blue for numeric values */
+  --sh-constant: #0969da;
+  /* Dark blue for constants */
+  --sh-operator: #d73a49;
+  /* Red for operators */
+  --sh-parameter: #005cc5;
+  /* Blue for parameters */
+  --sh-tag: #22863a;
+  /* Dark green for HTML/JSX tags */
+  --sh-attribute: #6f42c1;
+  /* Purple for attributes */
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+    --sh-class: #4c97f8;
+    /* Blue for classes */
+    --sh-identifier: #e6e6e6;
+    /* Slightly off-white for better readability */
+    --sh-keyword: #ff7b72;
+    /* Vibrant red for keywords */
+    --sh-string: #a5d6a7;
+    /* Soft green for strings */
+    --sh-sign: #79b8ff;
+    /* Light blue for punctuation/symbols */
+    --sh-comment: #8b949e;
+    /* Muted gray for comments */
+    --sh-jsxliterals: #d2a8ff;
+    /* Purple for JSX literals */
+    --sh-property: #ff9e64;
+    /* Orange for properties */
+    --sh-variable: #79c0ff;
+    /* Light blue for variables */
+    --sh-function: #d2a8ff;
+    /* Purple for functions */
+    --sh-number: #f8c555;
+    /* Gold for numeric values */
+    --sh-constant: #a5d6ff;
+    /* Pale blue for constants */
+    --sh-operator: #ff9e64;
+    /* Orange for operators */
+    --sh-parameter: #a5d6ff;
+    /* Light blue for parameters */
+    --sh-tag: #7ee787;
+    /* Bright green for HTML/JSX tags */
+    --sh-attribute: #ffab70;
+    /* Peach for attributes */
+  }
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: Arial, Helvetica, sans-serif, monospace;
+}
+
+/* Blog content styling */
+.prose {
+  @apply text-gray-800 dark:text-neutral-400;
+}
+
+.prose h1 {
+  @apply text-gray-900 dark:text-neutral-100 text-xl font-medium mt-8 mb-4;
+}
+
+.prose h2 {
+  @apply text-gray-900 dark:text-neutral-100 text-lg font-medium mt-6 mb-3;
+}
+
+.prose h3 {
+  @apply text-gray-900 dark:text-neutral-100 font-medium mt-4 mb-2;
+}
+
+.prose p {
+  @apply text-gray-800 dark:text-neutral-400 my-4 leading-relaxed;
+}
+
+/* Staggered paragraph animations */
+.prose .prose-paragraph {
+  animation: slideFadeUp 0.6s ease-out forwards;
+  opacity: 0;
+}
+
+.prose .prose-paragraph:nth-child(1) {
+  animation-delay: 0.1s;
+}
+
+.prose .prose-paragraph:nth-child(2) {
+  animation-delay: 0.15s;
+}
+
+.prose .prose-paragraph:nth-child(3) {
+  animation-delay: 0.2s;
+}
+
+.prose .prose-paragraph:nth-child(4) {
+  animation-delay: 0.25s;
+}
+
+.prose .prose-paragraph:nth-child(5) {
+  animation-delay: 0.3s;
+}
+
+.prose .prose-paragraph:nth-child(6) {
+  animation-delay: 0.35s;
+}
+
+.prose .prose-paragraph:nth-child(7) {
+  animation-delay: 0.4s;
+}
+
+.prose .prose-paragraph:nth-child(8) {
+  animation-delay: 0.45s;
+}
+
+.prose .prose-paragraph:nth-child(9) {
+  animation-delay: 0.5s;
+}
+
+.prose .prose-paragraph:nth-child(n+10) {
+  animation-delay: 0.55s;
+}
+
+.prose ul {
+  @apply text-gray-800 dark:text-neutral-400 my-4 ml-6 list-disc space-y-1;
+}
+
+.prose ol {
+  @apply text-gray-800 dark:text-neutral-400 my-4 ml-6 list-decimal space-y-1;
+}
+
+.prose li {
+  @apply text-gray-800 dark:text-neutral-400;
+}
+
+.prose strong {
+  @apply text-gray-900 dark:text-neutral-200 font-medium;
+}
+
+.prose code {
+  @apply bg-gray-100 dark:bg-neutral-800 text-gray-900 dark:text-neutral-200 px-1 py-0.5 rounded text-sm;
+}
+
+.prose pre {
+  @apply bg-gray-100 dark:bg-neutral-900 rounded-lg overflow-x-auto border border-gray-200 dark:border-neutral-800 py-3 px-4 text-sm my-4;
+}
+
+.prose pre code {
+  @apply bg-transparent p-0;
+}
+
+.prose blockquote {
+  @apply bg-gray-100 dark:bg-neutral-800/30 border-l-2 border-gray-300 dark:border-neutral-600 pl-4 py-2 my-4 italic text-gray-700 dark:text-neutral-300;
+}
+
+.prose a {
+  @apply text-stone-600 dark:text-stone-300 underline decoration-stone-500 dark:decoration-stone-400 decoration-[0.5px] underline-offset-4 transition-colors hover:text-stone-800 dark:hover:text-stone-200 hover:decoration-stone-700 dark:hover:decoration-stone-200;
+}
+
+.prose img {
+  @apply rounded-lg my-4;
+}
+
+.prose figure {
+  @apply my-6;
+}
+
+.prose figcaption {
+  @apply text-center text-sm text-gray-600 dark:text-neutral-400 mt-2 italic;
+}
+
+.prose table {
+  @apply min-w-full divide-y divide-gray-200 dark:divide-neutral-700 my-6;
+}
+
+.prose thead {
+  @apply bg-gray-50 dark:bg-neutral-800;
+}
+
+.prose tbody {
+  @apply divide-y divide-gray-200 dark:divide-neutral-700;
+}
+
+.prose th {
+  @apply px-4 py-3 text-left text-xs font-medium text-gray-700 dark:text-neutral-300 uppercase tracking-wider;
+}
+
+.prose td {
+  @apply px-4 py-3 whitespace-nowrap text-sm text-gray-700 dark:text-neutral-400;
+}
+
+.prose tr:hover {
+  @apply bg-gray-50 dark:bg-neutral-800/50;
+}
+
+/* Blog content staggered animations */
+.blog-content>* {
+  animation: slideFadeUp 0.6s ease-out both;
+}
+
+.blog-content>*:nth-child(1) {
+  animation-delay: 0.1s;
+}
+
+.blog-content>*:nth-child(2) {
+  animation-delay: 0.15s;
+}
+
+.blog-content>*:nth-child(3) {
+  animation-delay: 0.2s;
+}
+
+.blog-content>*:nth-child(4) {
+  animation-delay: 0.25s;
+}
+
+.blog-content>*:nth-child(5) {
+  animation-delay: 0.3s;
+}
+
+.blog-content>*:nth-child(6) {
+  animation-delay: 0.35s;
+}
+
+.blog-content>*:nth-child(7) {
+  animation-delay: 0.4s;
+}
+
+.blog-content>*:nth-child(8) {
+  animation-delay: 0.45s;
+}
+
+.blog-content>*:nth-child(9) {
+  animation-delay: 0.5s;
+}
+
+.blog-content>*:nth-child(10) {
+  animation-delay: 0.55s;
+}
+
+.blog-content>*:nth-child(11) {
+  animation-delay: 0.6s;
+}
+
+.blog-content>*:nth-child(12) {
+  animation-delay: 0.65s;
+}
+
+.blog-content>*:nth-child(13) {
+  animation-delay: 0.7s;
+}
+
+.blog-content>*:nth-child(14) {
+  animation-delay: 0.75s;
+}
+
+.blog-content>*:nth-child(15) {
+  animation-delay: 0.8s;
+}
+
+.blog-content>*:nth-child(n+16) {
+  animation-delay: 0.85s;
+}
+
+.anchor {
+  @apply absolute invisible no-underline;
+  margin-left: -1em;
+  padding-right: 0.5em;
+  width: 80%;
+  max-width: 700px;
+  cursor: pointer;
+}
+
+.anchor:hover {
+  @apply visible;
+}
+
+.anchor:after {
+  @apply text-gray-400 dark:text-neutral-600;
+  content: "#";
+}
+
+.prose *:hover>.anchor {
+  @apply visible;
+}
+
+pre::-webkit-scrollbar {
+  display: none;
+}
+
+pre {
+  -ms-overflow-style: none;
+  /* IE and Edge */
+  scrollbar-width: none;
+  /* Firefox */
+}
+
+/* Remove Safari input shadow on mobile */
+input[type="text"],
+input[type="email"] {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+}
+
+table {
+  display: block;
+  max-width: fit-content;
+  overflow-x: auto;
+  white-space: nowrap;
+}
+
+.title {
+  text-wrap: balance;
+}
+
+@layer utilities {
+  @media print {
+    body {
+      background: white !important;
+      color: black !important;
+    }
+
+    .print\:hidden {
+      display: none !important;
+    }
+
+    footer {
+      display: none !important;
+    }
+
+    * {
+      -webkit-print-color-adjust: exact !important;
+      color-adjust: exact !important;
+    }
+
+    .text-stone-100,
+    .text-neutral-100,
+    .text-neutral-200,
+    .text-neutral-400,
+    .text-neutral-500,
+    .text-gray-900,
+    .text-gray-700,
+    .text-gray-600 {
+      color: black !important;
+    }
+
+    a {
+      color: #2563eb !important;
+    }
+
+    h1 {
+      font-size: 24px !important;
+      font-weight: bold !important;
+      text-align: center !important;
+      margin-bottom: 16px !important;
+    }
+
+    h2 {
+      font-size: 16px !important;
+      font-weight: bold !important;
+      border-bottom: 1px solid #d1d5db !important;
+      padding-bottom: 4px !important;
+      margin-bottom: 16px !important;
+      margin-top: 24px !important;
+    }
+
+    h3 {
+      font-size: 14px !important;
+      font-weight: 600 !important;
+    }
+
+    p,
+    li {
+      font-size: 12px !important;
+      line-height: 1.4 !important;
+    }
+
+    .space-y-12>*+* {
+      margin-top: 24px !important;
+    }
+
+    .space-y-8>*+* {
+      margin-top: 16px !important;
+    }
+
+    .space-y-6>*+* {
+      margin-top: 12px !important;
+    }
+
+    .space-y-2>*+* {
+      margin-top: 4px !important;
+    }
+
+    .space-y-1>*+* {
+      margin-top: 2px !important;
+    }
+
+    @page {
+      margin: 0.5in;
+      size: A4;
+    }
+
+    .max-w-4xl {
+      max-width: none !important;
+    }
+
+    .mx-auto {
+      margin-left: 0 !important;
+      margin-right: 0 !important;
+    }
+
+    .mb-32 {
+      margin-bottom: 0 !important;
+    }
+  }
+}

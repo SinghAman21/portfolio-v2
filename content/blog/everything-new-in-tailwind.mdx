@@ -1,0 +1,360 @@
+---
+title: "Everything New in Tailwind v4"
+publishDate: "18 March 2025"
+slug: "everything-new-in-tailwind"
+description: "Tailwind released new version, so here are all the details of it."
+tags: ["tailwindcss"]
+---
+
+## Introduction
+
+So recently, I was making my changes my [portfolio](https://avikmukherjee.me) regarding the UI in the blogs section and was trying to change the project's card as well, but an interesting observation that I came across was that now there was no `tailwind.config.js` file in the root folder. 
+
+So when I saw the package.json, I noticed that tailwind was using v4 which was recently announced (totally missed it 🥲 and I can myself developer 😅). So yeah comming back to topic, I digged deep into it and here is all my observations regarding the changes that were done in tailwind to make our life easier or harder based on the way you look at it. 
+
+## True Love of Frontend Developers
+
+So, every frontend developer now a days uses tailwind css for their frontend project. It is quite easy to setup if you follow their [documentation](https://tailwindcss.com/docs/installation/using-vite) and why wouldn't they love it. It makes writing boring CSS fun and easier to develope their sites as well. Everything from their utility-first approach to their design consistency have became a standard used by various UI tools and with `Tailwind` we wouldn't had seen the rise of [`ShadCN`](https://ui.shadcn.com) and [`HeroUI`](https://www.heroui.com) as well, because let's be honest writing vanilla CSS is a pain in the arse. 
+
+Some of the key factor are listed below:
+### No Context Switching:
+With Tailwind, we stay in our HTML/JSX/TSX files instead of constantly switching between markup and stylesheets. 
+
+*Without Tailwind:*
+```jsx
+<button class="primary_button">Click me</button>
+```
+```css
+.primary_button{background-color: yellow}
+```
+
+*With Tailwind:*
+```jsx
+<button class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+  Click me
+</button>
+```
+
+### Responsive Design Made Simple:
+
+Every written Media Queries? I wrote and then I never wanted to write it again. So tailwind understanding the pain, made sure that it is kept simple and that is exactly what they did. 
+
+```html
+<div class="w-full md:w-1/2 lg:w-1/3">
+    <!-- Fully Responsive Content-->
+</div>
+```
+
+### Reduced CSS Bundle Size:
+
+In our CSS file, there are various unused classes which we dont use by default and they are being delived as an extra baggage for Bandwidth. So, in production, , Tailwind automatically removes unused classes, resulting in minimal CSS footprint for better performance.
+
+
+
+## A necessary Evil
+
+Even though it has made the life of developers easier, it is not saved itself from the critisim, some of them are:
+
+### HTML Bloatware:
+Our HTML files are growing longer and more difficult to read, crammed with dozens of utility classes on every element which makes it harder to read and maintain.
+
+### Debugging Challenges:
+Finding styling issues (using browser dev tools) within long chains of utility classes can be more difficult than debugging named CSS classes with clear inheritance pattern which was not the case with Plain CSS. 
+
+### Vendor LockIN:
+Now whether we try to accept it or not, let's be honest how many of us remember the basic CSS syntax? Well very less indeed, we are now using tailwind so much that we are now remembering tailwind syntax their unique ways of doings things, just like NextJS if you want to see the example.
+
+And if you need more reasons, you can post a picture of tailwind code on [X](http://x.com) and then see the drama. Credits to [FireShip](https://www.youtube.com/watch?v=lHZwlzOUOZ4) video.
+
+
+## So what's New?
+
+You can read the full release [here](https://tailwindcss.com/blog/tailwindcss-v4). In this blog we will be going though the major changes that have been made in this version. 
+
+**1. New Engine, New Speed**: It utilized Rust based engine for where full builds are now upto *5x* faster.
+
+**2. CSS-First Configuration**: At first it used the JS file for it's configuration but now it is being replaced by CSS file which we generally use. 
+
+**3. Unified Toolchain:** Integrated [Lightning CSS](https://lightningcss.dev) for easier setup.
+
+**4. New API's and Color Palette:** Introduced Container Queries and Gradient API's for more styling our elements. 
+
+
+
+### New Engine, New Speed:
+
+This new Tailwind Version is rewritten from ground up and it is made to 3.5x times faster for full rebuilds and for incremental builds to be over 8x faster compared to previous versions. The current engine is [Oxide Engine](https://medium.com/@bomber.marek/whats-tailwind-oxide-engine-the-next-evolution-of-tailwind-css-32e7ef8e19a1), which is specifically made for Tailwind needs and smarted way's of handling data. Below is a table taken from the official release.
+
+| Build Type                              | v3.4  | v4.0  | Improvement |
+|-----------------------------------------|-------|-------|-------------|
+| Full build                              | 378ms | 100ms | 3.78x       |
+| Incremental rebuild with new CSS        | 44ms  | 5ms   | 8.8x        |
+| Incremental rebuild with no new CSS     | 35ms  | 192µs | 182x        |
+
+
+Now previously, they were using a `glob` object to read all the files which was taking time to apply changes in the build times as well, so now due to this slower build times were there as well. For more info you can watch this [video](https://youtu.be/9gAASVgrYgo?si=FqVGwCn9L-Fe4h7X) 
+
+### Designed for Modern Web:
+They are now leveraging new and modern CSS features like `@layer` and `@property` which is resulting in giving more crontol to the user to define style rules so that they can interact with each other, defining `custom properties explicitly` so that it is easier to change how things look when in transition, along with `color-mix()` which helps us in adjusting the opacity of color value.
+
+```css
+@layer theme, base, components, utilities;
+@layer utilities {
+  .mx-6 {
+    margin-inline: calc(var(--spacing) * 6);
+  }
+  .bg-blue-500\/50 {
+    background-color: color-mix(in oklab, var(--color-blue-500) 50%, transparent);
+  }
+}
+@property --tw-gradient-from {
+  syntax: "<color>";
+  inherits: false;
+  initial-value: #0000;
+}
+```
+
+### Simplified Installation:
+Now, a lot of default boilerplate has been removed in this new version. You can now setup tailwind very easily using the below steps:
+
+```bash
+npm i tailwindcss @tailwindcss/postcss
+```
+```js
+export default {
+    plugins: ["@tailwindcss/postcss"]
+}
+```
+```css
+@import "tailwindcss"
+```
+Now all this is now in `Just One line of CSS`, just by adding `@import "tailwindcss"` we can start building and no configuration is required by us to help tailwind detect which files to detect and apply it's styles to. It automatically detects everythings. They are now, ignoring everything in our `gitignore` file and extensions of images, videos, .zip files and more. And if you need any of them, you can simply add then right in the CSS file using the syntax:
+
+```css
+@source "<Path of the file you intend to add>"
+```
+
+### CSS First Configuration:
+
+One of the biggest changes in Tailwind CSS v4.0 is the shift from configuring your project in JavaScript to configuring it in CSS. Instead of a `tailwind.config.js` file, now everything is now written in CSS file where we are importing tailwind. Below is an example of how it looked before vs now:
+
+*BEFORE*
+```ts
+import type { Config } from "tailwindcss"
+const config: Config = {
+  darkMode: ["class"],
+  content: [
+    "./pages/**/*.{js,ts,jsx,tsx,mdx}",
+    "./components/**/*.{js,ts,jsx,tsx,mdx}",
+    "./app/**/*.{js,ts,jsx,tsx,mdx}",
+    "*.{js,ts,jsx,tsx,mdx}",
+  ],
+  theme: {
+    extend: {
+      colors: {
+        border: "hsl(var(--border))",
+        input: "hsl(var(--input))",
+        ring: "hsl(var(--ring))",
+        background: "hsl(var(--background))",
+        foreground: "hsl(var(--foreground))",
+        primary: {
+          DEFAULT: "hsl(var(--primary))",
+          foreground: "hsl(var(--primary-foreground))",
+        },
+        secondary: {
+          DEFAULT: "hsl(var(--secondary))",
+          foreground: "hsl(var(--secondary-foreground))",
+        },
+        destructive: {
+          DEFAULT: "hsl(var(--destructive))",
+          foreground: "hsl(var(--destructive-foreground))",
+        },
+        muted: {
+          DEFAULT: "hsl(var(--muted))",
+          foreground: "hsl(var(--muted-foreground))",
+        },
+        accent: {
+          DEFAULT: "hsl(var(--accent))",
+          foreground: "hsl(var(--accent-foreground))",
+        },
+        popover: {
+          DEFAULT: "hsl(var(--popover))",
+          foreground: "hsl(var(--popover-foreground))",
+        },
+        card: {
+          DEFAULT: "hsl(var(--card))",
+          foreground: "hsl(var(--card-foreground))",
+        },
+      },
+      borderRadius: {
+        lg: "var(--radius)",
+        md: "calc(var(--radius) - 2px)",
+        sm: "calc(var(--radius) - 4px)",
+      },
+      fontFamily: {
+        mono: ["var(--font-mono)", "monospace"],
+      },
+      typography: {
+        DEFAULT: {
+          css: {
+            color: "rgba(255, 255, 255, 0.9)",
+            a: {
+              color: "rgba(255, 255, 255, 0.9)",
+              textDecoration: "underline",
+              "&:hover": {
+                opacity: "0.8",
+              },
+            },
+            h1: {
+              color: "rgba(255, 255, 255, 0.9)",
+              fontWeight: "500",
+            },
+            h2: {
+              color: "rgba(255, 255, 255, 0.9)",
+              fontWeight: "500",
+            },
+            h3: {
+              color: "rgba(255, 255, 255, 0.9)",
+              fontWeight: "500",
+            },
+            code: {
+              color: "rgba(255, 255, 255, 0.9)",
+              backgroundColor: "rgba(255, 255, 255, 0.1)",
+              padding: "0.2em 0.4em",
+              borderRadius: "0.25rem",
+            },
+            pre: {
+              backgroundColor: "rgba(255, 255, 255, 0.1)",
+              code: {
+                backgroundColor: "transparent",
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  plugins: [require("tailwindcss-animate"), require("@tailwindcss/typography")],
+}
+
+export default config
+```
+
+*NOW*
+
+```css
+@import "tailwindcss";
+@theme {
+  --font-display: "Satoshi", "sans-serif";
+  --breakpoint-3xl: 1920px;
+  --color-avocado-100: oklch(0.99 0 0);
+  --color-avocado-200: oklch(0.98 0.04 113.22);
+  --color-avocado-300: oklch(0.94 0.11 115.03);
+  --color-avocado-400: oklch(0.92 0.19 114.08);
+  --color-avocado-500: oklch(0.84 0.18 117.33);
+  --color-avocado-600: oklch(0.53 0.12 118.34);
+  --ease-fluid: cubic-bezier(0.3, 0, 0, 1);
+  --ease-snappy: cubic-bezier(0.2, 0, 0, 1);
+  /* ... */
+}
+```
+
+### Dynamic Utility Values and Varients:
+It introduces a more intuitive way to work with utilities and variants, eliminating the need for manual configuration or arbitrary value syntax in many cases. For example:
+
+```html
+<div class="grid grid-cols-15">
+  <!-- ... -->
+</div>
+```
+Even spacing utilites like `px-*`, `mt-*`, `w-*`, `h-*`, and more are now dynamically derived from a single spacing scale variable and accept any value out of the box:
+
+```css
+@layer theme {
+  :root {
+    --spacing: 0.25rem;
+  }
+}
+@layer utilities {
+  .mt-8 {
+    margin-top: calc(var(--spacing) * 8);
+  }
+  .w-17 {
+    width: calc(var(--spacing) * 17);
+  }
+  .pr-29 {
+    padding-right: calc(var(--spacing) * 29);
+  }
+}
+```
+
+### Change in Color Palette:
+
+They have now completely moved away from `rgb` to [oklch](https://evilmartians.com/chronicles/oklch-in-css-why-quit-rgb-hsl) . It was introduced in 2020 by [Björn Ottosson](https://x.com/bjornornorn) supported from new versions of chrome. 
+
+
+### Container Queries:
+With the release of Tailwind CSS v4.0, container queries are now built into the core framework, eliminating the need for the `@tailwindcss/container-queries` plugin. This means you can apply responsive styles based on a parent container's size directly within your utility classes. For example, defining grid layouts that adapt dynamically is now as simple as:
+
+```html
+<div class="@container">
+  <div class="grid grid-cols-1 @sm:grid-cols-3 @lg:grid-cols-4">
+    <!-- ... -->
+  </div>
+</div>
+```
+In addition to standard container queries, v4.0 introduces max-width container queries using the new `@max-*` and `@min-*` variant. This allows elements to respond to container width constraints just like traditional media queries:
+```html
+<div class="@container">
+  <div class="grid grid-cols-3 @max-md:grid-cols-1">
+    <!-- ... -->
+  </div>
+</div>
+```
+And for even more flexibility, we can combile both the `@max-*` and `@min-*` variant:
+```html
+<div class="@container">
+  <div class="flex @min-md:@max-xl:hidden">
+    <!-- ... -->
+  </div>
+</div>
+```
+which makes it even more easier to build responsive sites. 
+
+### Other Changes:
+Tailwind CSS v4.0 introduces several powerful enhancements. New 3D transform utilities like `rotate-x-*`, `rotate-y-*`, `scale-z-*`, and `translate-z-*` allow for more dynamic layouts. The expanded gradient APIs now support linear gradient angles (`bg-linear-45`), color interpolation modifiers (`bg-linear-to-r/srgb`), and new conic and radial gradient utilities (`bg-conic-*`, `bg-radial-*`).
+
+A new `@starting-style` variant enables animations when elements first appear without JavaScript, while the `not-*` variant brings native support for the `:not() pseudo-class`, `negated media queries`, and `@supports` queries. Additional utilities include inset shadows (`inset-shadow-*`), *field sizing for auto-resizing textareas, color scheme controls, font stretching*, `nth-*` and `in-*` variants, support for `:popover-open`, and a *new descendant variant*.
+
+### Removed Deprecated Utilites:
+
+Tailwind CSS 4.0 removes several deprecated utilities that were originally scheduled for deletion, including:
+
+**text-opacity-*** - Replaced by `text-{color}/*`
+**flex-grow-*** - Replaced by `grow-*`
+**decoration-slice** - Replaced by `box-decoration-slice`
+
+Here are all the deprecated [utilities](https://tailwindcss.com/docs/upgrade-guide#removed-deprecated-utilities)
+
+
+## How can you upgrade?
+
+You can upgrade by using the command while staying in v3:
+
+```bash
+npx @tailwindcss/upgrade@next
+```
+OR
+
+```bash
+npx @tailwindcss/upgrade
+```
+
+this upgrade tool will automate the entire migration process including updating your dependencies, migrating your configuration file to CSS, and handling any changes to your template files. This will require you to use `NODEJS 20` or higher. If you want to upgrade manually, you check this [link](https://tailwindcss.com/docs/upgrade-guide#upgrading-manually)
+
+
+## Conclusion
+Tailwind CSS 4.0 is all about making things faster and simpler for people who build websites. It's got a new engine that speeds everything up and brings in some cool updates that make your job easier. In this blog we have gone through the major changes that is being introduced in Tailwind CSS 4.0 and also how can you upgrade to v4 of tailwind without much hassle. Overall we need to again study and learn new things and adapt to the new changes of v4. 
+
+
+Thank you for reading this small article/blog of mine. What are your thoughts do let me know in the place I will post the link, mainly in [Peerlist](https://peerlist.io/avikmukherjee/signup) or [X](https://x.com/useraman21) or you can contact me using the contact form in my [portfolio](https://www.avikmukherjee.me/contact). If you want to form, a group regarding the above topics so that we can learn it together, DM me up on Discord (user ID - `call7062`) or on X or Peerlist. 

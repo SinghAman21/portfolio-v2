@@ -1,0 +1,62 @@
+.footer {
+  --footer-text-size: clamp(6rem, 14rem, 14vw);
+
+  display: flex;
+  justify-content: center;
+  color: rgb(107, 114, 128);
+  position: relative;
+  overflow: clip;
+  min-height: var(--footer-text-size);
+}
+
+@media (prefers-color-scheme: dark) {
+  .footer {
+    color: rgb(163, 163, 163);
+  }
+}
+
+.footer-text {
+  text-rendering: geometricPrecision;
+  font-weight: 900;
+  font-size: var(--footer-text-size);
+  letter-spacing: 0;
+  opacity: 0.3;
+  position: absolute;
+  bottom: calc(-1 * var(--footer-text-size) / 1.6);
+}
+
+.footer-grid {
+  background-color: transparent;
+  background-image: radial-gradient(transparent 1px, rgb(156, 163, 175) 1px);
+  background-size: 4px 4px;
+  backdrop-filter: blur(3px);
+  mask: linear-gradient(rgba(0, 0, 0, 0) 0%, rgb(0, 0, 0, 0.6) 100%);
+  opacity: 1;
+  position: absolute;
+  inset: 0;
+  overflow: visible;
+  z-index: 1;
+  flex: none;
+}
+
+@media (prefers-color-scheme: dark) {
+  .footer-grid {
+    background-image: radial-gradient(transparent 1px, rgb(0, 0, 0) 1px);
+  }
+}
+
+.footer-gradient {
+  position: absolute;
+  inset: 0;
+  top: -50%;
+  height: 150%;
+  background-image: linear-gradient(rgba(255, 255, 255, 0) 0% 50%,
+      rgba(255, 255, 255, 0.8) 100%);
+}
+
+@media (prefers-color-scheme: dark) {
+  .footer-gradient {
+    background-image: linear-gradient(rgba(0, 0, 0, 0) 0% 50%,
+        rgba(0, 0, 0, 0.6) 100%);
+  }
+}
