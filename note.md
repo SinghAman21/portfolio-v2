@@ -1,6 +1,7 @@
 - About
 - techstack
 - urls
-- recheck (llms)
+- recheck (llms), layouts, persona,resume and project details
 - og images
 - create a keyboard control cmd+k then a b c for others etc
+- show more/all button which will redirect to particular route

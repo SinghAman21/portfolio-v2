@@ -34,8 +34,8 @@ export default function ReachSection({ animationDelay = '1.2s' }: ReachSectionPr
         </span>
         <span className="text-gray-700 dark:text-neutral-400">
           — or send me an email at{" "}
-          <Anchor href="mailto:work.singhaman@gmail.com" target="_blank" className="transition-all duration-200 hover:opacity-70 hover:underline underline-offset-2">
-            work.singhaman@gmail.com
+          <Anchor href="mailto:singhaman21@proton.me" target="_blank" className="transition-all duration-200 hover:opacity-70 hover:underline underline-offset-2">
+            singhaman21@proton.me
           </Anchor>
         </span>
       </div>

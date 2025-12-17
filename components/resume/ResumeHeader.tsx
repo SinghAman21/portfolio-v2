@@ -14,10 +14,10 @@ export default function ResumeHeader() {
           Mumbai |{" "}
 
           <Link
-            href="mailto:work.singhaman@gmail.com"
+            href="mailto:singhaman21@proton.me"
             className="text-gray-700 dark:text-stone-300 underline decoration-gray-500 dark:decoration-stone-400 decoration-[0.5px] underline-offset-4 transition-colors hover:text-gray-900 dark:hover:text-stone-200"
           >
-            work.singhaman@gmail.com
+            singhaman21@proton.me
           </Link>
         </p>
         <div className="flex flex-wrap gap-4 justify-center">

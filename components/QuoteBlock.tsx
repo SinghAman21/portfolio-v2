@@ -13,7 +13,7 @@ export default function QuoteBlock({ quote, animationDelay = '0.05s' }: QuoteBlo
     >
       <blockquote className="relative italic text-gray-700 dark:text-neutral-400 py-4 px-6 max-w-2xl">
         <CornerMarkers variant="static" />
-        <p className="leading-relaxed">
+        <p className="leading-relaxed text-center">
           {quote}
         </p>
       </blockquote>

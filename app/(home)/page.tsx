@@ -22,18 +22,17 @@ export default function Home() {
 
       <AnimatedSection delay="0.05s" className="mt-6">
         <p className="text-gray-600 dark:text-stone-400 leading-relaxed">
-          Full-stack developer currently working at{' '}
-          <Anchor href="https://www.superalign.ai" target="_blank" className="transition-all duration-200 hover:opacity-80">SuperAlign AI</Anchor>.
+          Full-stack developer currently improving myself.
           I build scalable web applications with Next.js, React, and Node.js that help businesses grow and solve real problems.
         </p>
       </AnimatedSection>
 
-      <AnimatedSection delay="0.08s" className="mt-6">
-        <p className="text-gray-700 dark:text-neutral-400">This is something I remind myself of every day.</p>
-      </AnimatedSection>
+      {/* <AnimatedSection delay="0.08s" className="mt-6">
+        <p className="text-gray-700 dark:text-neutral-400">One of my dev friend said this and now can't get this out of my mind.</p>
+      </AnimatedSection> */}
 
       <QuoteBlock
-        quote="Every morning you have two choices: Continue to sleep with your dreams or wake up and chase them 💪🏻"
+        quote="You shall work hard enough to become better than yesterday's 'you'."
         animationDelay="0.11s"
       />
 
@@ -51,7 +50,11 @@ export default function Home() {
           description="Companies I've worked with to deliver software solutions and drive technical growth of the company."
           animationDelay="0.17s"
         />
-        {recentExperiences.map((experience, index) => (
+
+        <div
+          className="animate-[slideFadeUp_0.35s_ease-out] pl-4 py-4"
+          style={{ animationDelay: '0.25s', animationFillMode: 'both' }}>
+          {recentExperiences.map((experience, index) => (
             <ExperienceItem
               key={index}
               title={experience.title}
@@ -61,6 +64,7 @@ export default function Home() {
               companySite={experience.companySite}
             />
           ))}
+        </div>
       </div>
 
       <div>
@@ -70,15 +74,19 @@ export default function Home() {
           description="Batteleground of my personal projects that I've built to learn new technologies."
           animationDelay="0.20s"
         />
-        {recentProjects.map((project, index) => (
-          <ProjectItem
-            key={index}
-            title={project.title}
-            description={project.description}
-            demoUrl={project.demoUrl}
-            githubUrl={project.githubUrl}
-          />
-        ))}
+        <div
+          className="animate-[slideFadeUp_0.35s_ease-out] pl-4 py-4"
+          style={{ animationDelay: '0.30s', animationFillMode: 'both' }}>
+          {recentProjects.map((project, index) => (
+            <ProjectItem
+              key={index}
+              title={project.title}
+              description={project.description}
+              demoUrl={project.demoUrl}
+              githubUrl={project.githubUrl}
+            />
+          ))}
+        </div>
       </div>
 
       <div>
@@ -88,7 +96,11 @@ export default function Home() {
           description="Thoughts, tutorials, and insights on web development, technology, and software engineering."
           animationDelay="0.23s"
         />
-        <BlogList length={3}/>
+        <div
+          className="animate-[slideFadeUp_0.35s_ease-out] pl-4 py-4"
+          style={{ animationDelay: '0.35s', animationFillMode: 'both' }}>
+          <BlogList length={3} />
+        </div>
       </div>
 
       <HomeLink

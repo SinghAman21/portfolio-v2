@@ -3,7 +3,7 @@ export const projects = [
     title: "SilentParcel",
     year: "2025",
     description:
-      "A Serverless deployment monitoring tool solving the cold start problem. Written in Go and NextJS",
+      "End-to-end encrypted file sharing that disappears without a trace. No accounts, no tracking, no compromises. Written in NextJS and backed by supabase and appwrite for database and bucket storage.",
     demoUrl: "https://silentparcel.com",
     githubUrl: "https://github.com/SinghAman21/silentparcel",
   },
@@ -11,57 +11,55 @@ export const projects = [
     title: "Graphex",
     year: "2025",
     description:
-      "FormCraft AI is an open-source, no-code AI form builder with drag-and-drop design, AI-generated forms, conditional logic, regex validation, integrations (Google Sheets), and real-time analytics — all with customizable templates and transparent, no-recurring-fee pricing.",
-    demoUrl: "https://formcraftai.xyz",
-    githubUrl: "https://github.com/SinghAman21/formcraftAI",
+      "Create your own design follow and create beautiful contribution graphs. Build a healthy habit of contributing daily. Built with NextJS, Tailwind CSS, and Github OAuth.",
+    demoUrl: "https://graphex.me",
+    // githubUrl: "https://github.com/SinghAman21/",
   },
   {
     title: "SVG-preview",
     year: "2025",
     description:
-      "It is a powerful, privacy-focused web analytics platform that helps you to visualize the website's reach. Built it due to Vercel Analytics Quota exhaustion.",
-    demoUrl: "https://webtracker.AmanSingh.me",
-    githubUrl: "https://github.com/SinghAman21/webtracker",
+      "A simple yet useful vscode extension to preview SVG files in the editor. Built with VSCode API written in TypeScript. Also available on the VSCode Marketplace and Cursor Extension Marketplace.",
+    demoUrl: "https://marketplace.visualstudio.com/items?itemName=SinghAman21.svg-preview-hover",
+    githubUrl: "https://github.com/SinghAman21/svg-preview",
   },
   {
     title: "template-boss",
     year: "2025",
     description:
-      "PeerShare is a secure peer-to-peer file sharing and video calling app built with Next.js and WebRTC. It enables real-time chat, HD video calls, and unlimited file transfers without storing any data on servers.",
-    demoUrl: "https://peershare.AmanSingh.me",
-    githubUrl: "https://github.com/SinghAman21/peerFileShare",
-  },
-  {
-    title: "readme_md",
-    year: "2025",
-    description:
-      "It is a Chess game built with NextJS and AI SDK. In here the user can play against AI and can improve their skills. Built it because I suck at Chess.",
-    demoUrl: "https://chess.AmanSingh.me/",
-    githubUrl: "https://github.com/SinghAman21/chess",
-  },
-  {
-    title: "Pet Bro",
-    year: "2025",
-    description:
-      "AI-powered web application that generates fully customizable PowerPoint presentations from user input. Built with Next.js and FastAPI, it uses Google’s Gemini AI to create slide content tailored to a specific audience. Hosted on Vercel and AWS EC2.",
-    demoUrl: "https://aipptgenerator.vercel.app/",
-    githubUrl: "https://github.com/SinghAman21/aipptgenerator",
+      "Bunch of ready to use templates to skip the hectic setting up dev environment. Scaffold your next project with a single command. Built with JavaScript and Node.js.",
+    demoUrl: "https://www.npmjs.com/package/template-boss",
+    githubUrl: "https://github.com/SinghAman21/template-boss",
   },
   {
     title: "Key Logger",
     year: "2025",
     description:
-      "AI-powered web application that generates fully customizable PowerPoint presentations from user input. Built with Next.js and FastAPI, it uses Google’s Gemini AI to create slide content tailored to a specific audience. Hosted on Vercel and AWS EC2.",
-    demoUrl: "https://aipptgenerator.vercel.app/",
-    githubUrl: "https://github.com/SinghAman21/aipptgenerator",
+      "Keylogger is a simple keylogger that logs the keys pressed by the user. Built with Python and Tkinter.",
+    githubUrl: "https://github.com/SinghAman21/key-logger",
+  },
+  {
+    title: "readme_md",
+    year: "2024",
+    description:
+      "An AI powered README generator to help you create a beautiful README for your GitHub projects. Built with React, Tailwind CSS, framer motion and GEMINI API.",
+    demoUrl: "https://readthisme.netlify.app/",
+    githubUrl: "https://github.com/SinghAman21/readme_md",
+  },
+  {
+    title: "Pet Bro",
+    year: "2024",
+    description:
+        "PetBro is a simple web application to help you find a perfect pet veterinarian in your area. Built with Java Spring Boot and MySQL.",
+    githubUrl: "https://github.com/SinghAman21/petbro",
   },
   {
     title: "My Chand",
-    year: "2025",
+    year: "2024",
     description:
-      "AI-powered web application that generates fully customizable PowerPoint presentations from user input. Built with Next.js and FastAPI, it uses Google’s Gemini AI to create slide content tailored to a specific audience. Hosted on Vercel and AWS EC2.",
-    demoUrl: "https://aipptgenerator.vercel.app/",
-    githubUrl: "https://github.com/SinghAman21/aipptgenerator",
+      "My Chand is a simple web application to impress your crush, made with HTML, CSS, and a bit of JavaScript.",
+    demoUrl: "https://chaand-one.vercel.app/",
+    githubUrl: "https://github.com/SinghAman21/My-Chand",
   },
 ];
 
@@ -82,10 +80,9 @@ export const Experience = [
     year: "July 2025 – Present",
     company: "GDG",
     description: [
-      "Organized workshops, hackathons, and events to help students grow.",
-      "Facilitated technical discussions, mentorship, and community engagement, fostering knowledge sharing and effective communication among developers, enhancing team productivity and open source contributions",
-      "Built a community of 600+ tech enthusiasts.",
-      "Collaborated with organizations for event execution.",
+      "Organized workshops, hackathons and events to foster learning and growth among students.",
+      "Led tech talks, mentoring sessions, and community involvement to promote knowledge exchange and strong communication skills among developers, boosting team efficiency and open-source contributions.",
+      "Worked with organizations to execute events effectively.",
     ],
     companySite:
       "https://gdg.community.dev/gdg-on-campus-vidyalankar-institute-of-technology-mumbai-india/"      

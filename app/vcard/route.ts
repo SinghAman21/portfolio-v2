@@ -8,7 +8,7 @@ const baseUrl = "https://useraman.me";
 const userInfo = {
   firstName: "Aman",
   lastName: "Singh",
-  email: "work.singhaman@gmail.com",
+  email: "singhaman21@proton.me",
   address: "Mumbai, India",
   website: baseUrl,
   // Use PNG image as vCard only supports JPEG, PNG, and GIF (not WebP)
