@@ -162,8 +162,8 @@ export default function RootLayout({
               sameAs: [
                 "https://x.com/useraman21",
                 "https://github.com/SinghAman21",
-                "https://www.linkedin.com/in/Aman-Singh-8ab9911bb/",
-                "https://peerlist.io/AmanSingh/",
+                "https://www.linkedin.com/in/aman-singh21/",
+                "https://peerlist.io/singhaman21/",
               ],
               jobTitle: "Full-Stack Software Developer",
               worksFor: {

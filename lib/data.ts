@@ -67,9 +67,9 @@ export const Experience = [
   {
     title: "Full Stack Developer Intern",
     year: "September 2025 - December 2025",
-    company: "Eas Legal Services",
+    company: "Eas Legal Partners",
     description: [
-      "Developed production-grade code and a user-friendly interface to enhance user experience",
+      " Developed production-grade code and a user-friendly interface to enhance user experience",
       " Designed a robust RESTful API with Express and Prisma ORM, handling complex data relationships for user authentication, document management, and organization workflows.",
       " Deployed the application on AWS using nginx , EC2 instances, and S3 buckets for optimized performance and scalability."
     ],

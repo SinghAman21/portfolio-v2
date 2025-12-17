@@ -24,8 +24,8 @@ export default function Home() {
 
       <AnimatedSection delay="0.05s" className="mt-6">
         <p className="text-gray-600 dark:text-stone-400 leading-relaxed">
-          Full-stack developer currently improving myself.
-          I build scalable web applications with Next.js, React, and Node.js that help businesses grow and solve real problems.
+          Full-stack developer currently improving myself. <br />
+          I create scalable backend architecture and infrastructure for web applications. I use modern technologies that help businesses foster sustainability and solve practical business problems.
         </p>
       </AnimatedSection>
 
@@ -49,7 +49,7 @@ export default function Home() {
         <HomeLink
           href="/experience"
           label="experience"
-          description="Companies I've worked with to deliver software solutions and drive technical growth of the company."
+          description="Organizations I've partnered with to create software solutions and enhance their technical capabilities."
           animationDelay="0.17s"
           shortcutKey="E"
         />
@@ -74,7 +74,7 @@ export default function Home() {
         <HomeLink
           href="/projects"
           label="work"
-          description="Batteleground of my personal projects that I've built to learn new technologies."
+          description="A sandbox of my personal projects developed to explore and master new technologies."
           animationDelay="0.20s"
           shortcutKey="P"
         />
@@ -97,7 +97,7 @@ export default function Home() {
         <HomeLink
           href="/blog"
           label="writing"
-          description="Thoughts, tutorials, and insights on web development, technology, and software engineering."
+          description="Documents which contain my reflections as a growing developer and engineer."
           animationDelay="0.23s"
           shortcutKey="B"
         />
@@ -111,7 +111,7 @@ export default function Home() {
       <HomeLink
         href="/about"
         label="about"
-        description="Learn more about my journey, background, and what drives me as a developer."
+        description="See yourself about me and how I reached the current stage of my journey as a developer."
         animationDelay="0.26s"
         shortcutKey="A"
       />

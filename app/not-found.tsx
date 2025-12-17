@@ -332,11 +332,11 @@ export default function NotFound() {
               GitHub
             </Anchor>
             <span className="mx-1 text-neutral-400/50">·</span>
-            <Anchor href="https://www.linkedin.com/in/Aman-Singh-8ab9911bb/" target="_blank">
+            <Anchor href="https://www.linkedin.com/in/aman-singh21/" target="_blank">
               LinkedIn
             </Anchor>
             <span className="mx-1 text-neutral-400/50">·</span>
-            <Anchor href="https://peerlist.io/AmanSingh/" target="_blank">
+            <Anchor href="https://peerlist.io/singhaman21/" target="_blank">
               Peerlist
             </Anchor>
           </span>

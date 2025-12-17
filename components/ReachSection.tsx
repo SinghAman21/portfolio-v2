@@ -20,11 +20,11 @@ export default function ReachSection({ animationDelay = '1.2s' }: ReachSectionPr
             GitHub
           </Anchor>
           <span className="mx-1 text-gray-400 dark:text-neutral-400/50 transition-opacity duration-200">·</span>
-          <Anchor href="https://www.linkedin.com/in/Aman-Singh-8ab9911bb/" target="_blank" className="transition-all duration-200 hover:opacity-70 hover:scale-105 inline-block">
+          <Anchor href="https://www.linkedin.com/in/aman-singh21/" target="_blank" className="transition-all duration-200 hover:opacity-70 hover:scale-105 inline-block">
             LinkedIn
           </Anchor>
           <span className="mx-1 text-gray-400 dark:text-neutral-400/50 transition-opacity duration-200">·</span>
-          <Anchor href="https://peerlist.io/AmanSingh/" target="_blank" className="transition-all duration-200 hover:opacity-70 hover:scale-105 inline-block">
+          <Anchor href="https://peerlist.io/singhaman21/" target="_blank" className="transition-all duration-200 hover:opacity-70 hover:scale-105 inline-block">
             Peerlist
           </Anchor>
           <span className="mx-1 text-gray-400 dark:text-neutral-400/50 transition-opacity duration-200">·</span>
