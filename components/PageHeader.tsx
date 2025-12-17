@@ -45,7 +45,7 @@ export default function PageHeader({
       {description && (
         <p
           className={cn(
-            "mt-2 mb-8 text-gray-600 dark:text-neutral-400 leading-relaxed animate-[slideFadeUp_0.5s_ease-out]",
+            "mt-2 mb-8 text-justify text-gray-600 dark:text-neutral-400 leading-relaxed animate-[slideFadeUp_0.5s_ease-out]",
             descriptionClassName
           )}
         >

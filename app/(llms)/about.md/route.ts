@@ -1,6 +1,6 @@
-const aboutText = `I started my programming journey in my 3rd year of college, beginning with Python and Java before diving deep into the JavaScript ecosystem. What began as building simple websites evolved into creating products that solve real-world problems.
+const aboutText = `I’ve always been curious about how technology works and love taking things apart to understand what’s happening behind the scenes. That curiosity led me to programming during my junior college years, where I started experimenting with PHP and JavaScript and quickly got hooked on development.
 
-Previously shipped features at DataFoundry AI, Dank, and other startups. I enjoy working in different environments — from intimate 3-person teams to larger organizations — and take pride in delivering quality software that makes a difference.
+Previously shipped features at EaslegalPartners, GDG, and other startups. I enjoy working in different environments — from intimate 3-person teams to larger organizations — and take pride in delivering quality software that makes a difference.
 
 Currently exploring new domains in technology while staying focused on building user-friendly applications that address real-world problems.`;
 
@@ -31,6 +31,10 @@ ${aboutText}
 - Go
 - Python
 - AWS
+- Docker
+- Kubernetes
+- Terraform
+- VirtualBox
 `;
 
 export const dynamic = "force-static";
