@@ -47,9 +47,9 @@ export const resumeWorkExperience: WorkExperienceItem[] = [
     location: "Remote",
     period: "September 2025-December 2025",
     points: [
-      "• Represent v0 in the community and engage with developers to showcase AI-powered application development.",
-      "• Contribute to improving the Platform Experience for users by providing feedback and suggestions on new features.",
-      "• Help other developers by answering their questions and providing guidance on building applications with v0.",
+      "• Developed production-grade code and a user-friendly interface to enhance user experience",
+      "• Designed a robust RESTful API with Express and Prisma ORM, handling complex data relationships for user authentication, document management, and organization workflows.",
+      "• Deployed the application on AWS using nginx , EC2 instances, and S3 buckets for optimized performance and scalability.",
     ],
   },
 ];
@@ -57,50 +57,50 @@ export const resumeWorkExperience: WorkExperienceItem[] = [
 export const resumeProjects: ProjectItem[] = [
   {
     title: "SilentParcel",
-    techStack: "(Next.js, TypeScript, Tailwind CSS, Zustand, Liveblocks, React Flow, AI SDK, Groq)",
+    techStack: "(Next.js, TypeScript, Tailwind CSS, Shadcn UI, Github Actions, Supabase, Appwrite)",
     points: [
-      "• Built a privacy-first visual workspace for designing, simulating, and sharing system architectures with drag-and-drop cloud components and real-time collaboration.",
-      "• Implemented local-first storage with Zustand, enabling diagrams and simulation data to run entirely in the browser without external servers.",
-      "• Integrated Liveblocks for real-time collaboration with shared cursors, presence, and AI assistant with Create and Understand modes. Selected as Staff Picked Project of the Day on Peerlist.",
+      "• Built a end-to-end encrypted file sharing application that disappears without a trace.",
+      "• Implements AES-256 end-to-end encryption for files and chats, ensuring military-grade security without registration.",
+      "• Offers ephemeral anonymous chat rooms with real-time messaging, collaborative code editing, and WebRTC support for up to 10+ languages. Selected as Staff Picked Project of the Day on Peerlist.",
     ],
   },
   {
     title: "Graphex",
-    techStack: "(Next.js, TypeScript, Tailwind CSS, Prism React Renderer, Puppeteer, html2canvas-pro, MediaRecorder API)",
+    techStack: "(Next.js, TypeScript, Tailwind CSS, Prisma, Github OAuth, Shadcn UI, DodoPayments)",
     points: [
-      "• Developed a minimalist tool for creating beautiful screenshots of code, images, and websites with syntax highlighting, custom themes, and flexible styling options.",
-      "• Built an image editor with animation timeline support, enabling users to add smooth animations and export as PNG images or WebM videos.",
-      "• Implemented Puppeteer integration for high-quality website screenshots and integrated MediaRecorder API for video export functionality. Featured in top 5 projects on Peerlist.",
+      "• Integrates with GitHub via secure OAuth, enabling seamless connection of your account using GraphQL API without sharing credentials.",
+      "• Implemented an automated notification system with email (Resend API) and browser push notifications (Web Push API/VAPID), scheduled via GitHub Actions cron jobs, with timezone-aware delivery and user preference management.",
+      "• Architected a scalable backend with RESTful API routes, server-side rendering, scheduled cron jobs for daily reminders, and a subscription-based billing system with free trial management, deployed to production.",
     ],
   },
   {
     title: "template-boss",
-    techStack: "(Next.js, Remotion, GitHub API, Canvas API, v0)",
+    techStack: "(JavaScript, Node.js, npm)",
     points: [
-      "• Built a personalized GitHub activity summary tool that visualizes your year in code with beautiful animated summaries, similar to Spotify Wrapped.",
-      "• Integrated GitHub API to fetch user contributions, repositories, and coding statistics, then rendered them using Remotion for smooth animations.",
-      "• Implemented Canvas API for dynamic visualizations and used v0 for rapid prototyping and development.",
+      "• Acts as a starter-kit system: you choose a template and get a preconfigured setup instead of wiring tooling from scratch",
+      "• Automated boilerplate generation for JavaScript/TypeScript projects, reducing initial setup time and promoting standardized configurations across teams.",
+      "• Built Template Boss, an npm-based template CLI providing production-ready JS/TS starter templates to accelerate project setup and enforce consistent tooling.",
     ],
   },
   {
     title: "SVG Preview (vs-code/cursor extension)",
-    techStack: "(NextJS, TailwindCSS, Zustand, TanstackQuery, Clerk, MongoDB, Gemini, Polar)",
+    techStack: "(TypeScript, vs-code api)",
     points: [
-      "• Built a scalable and responsive SaaS application with Next.js, React, TypeScript, Drizzle ORM, and Tailwind CSS, featuring AI-powered form generation and a drag-and-drop builder, used by 30+ users.",
-      "• Implemented Clerk auth and Polar billing with secure routes, subscriptions, portals, and webhook syncing.",
-      "• Built a scalable and responsive web application with Drizzle ORM, Tailwind CSS, and dynamic AI-based form generation used by 50 users.",
+      "• Built SVG Preview, a browser-based tool to instantly render and inspect SVG files directly from local uploads or pasted SVG code, improving designer–developer collaboration.",
+      "• Implemented a responsive, minimal UI with live preview so developers can quickly iterate on SVG icons, logos, and illustrations without opening heavy design tools.",
+      "• Published SVG Preview as a VS Code extension on the official Marketplace and Cursor extension directory, enabling millions of developers to instantly render and inspect SVGs within their IDE.",
     ],
   },
 ];
 
 export const technicalSkills: TechnicalSkillsData = {
   languages: "JavaScript, Python, Go",
-  frameworks: "Express.js, React.js, Next.js, Vite, Playwright",
+  frameworks: "Express.js, React.js, Next.js, Vite",
   cloudPlatforms: "AWS, Linux",
   runtimes: "NodeJS, Bun, pnpm",
   ormDatabase: "Prisma, Drizzle, Mongoose, PostgreSQL, MySQL, SQLite, MongoDB",
   tools: "Docker, Git",
-  softSkills: "Leadership, Event Management, Writing, Public Speaking, Time Management",
+  softSkills: "Leadership, Collaborativity, Adaptability, Event Management, Problem Solving, Public Speaking, Time Management",
 };
 
 export const volunteerExperience: VolunteerExperienceItem = {
@@ -109,12 +109,12 @@ export const volunteerExperience: VolunteerExperienceItem = {
   location: "Hybrid",
   period: "2025 – Present",
   points: [
-    "• Collaborated with various teams to conduct over 10+ events, engaging over 300+ students which directly contributed to an increment in technical awareness by 30%.",
+    "• Collaborated with diverse teams to conduct many events and workshops where i was directly engaging students and contributing to an increment in technical awareness.",
   ],
 };
 
 export const education: EducationItem = {
-  institution: "VIDYALANKAR INSTITUTE OF TECHNOLOGY",
+  institution: "Vidyalankar Institute of Technology",
   degree: "Bachelor of Technology",
   location: "Mumbai, Maharashtra",
   period: "2023-Present",
