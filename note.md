@@ -1,7 +1,7 @@
-- About
-- techstack
-- urls
-- recheck (llms), layouts, persona,resume and project details
+- About page (flag: all done)
+- techstack (flag: all done)
+- urls (flag: all done)
+- recheck (llms), layouts, persona,resume and project details (flag: all done)
 - og images
-- create a keyboard control cmd+k then a b c for others etc
-- show more/all button which will redirect to particular route
+- create a keyboard control cmd+k then a b c for others etc (flag: all done)
+- show more/all button which will redirect to particular route (flag: all done)

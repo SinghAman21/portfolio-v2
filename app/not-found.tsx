@@ -194,7 +194,7 @@ export default function NotFound() {
       )}>
       <Header 
         name="Aman Singh" 
-        location="Kolkata, India." 
+        location="Mumbai, India." 
       />
 
       <section className="mt-6">
@@ -342,8 +342,8 @@ export default function NotFound() {
           </span>
           <span>
             — or send me an email at{" "}
-            <Anchor href="mailto:useraman21@gmail.com" target="_blank">
-              useraman21@gmail.com
+            <Anchor href="mailto:singhaman21@proton.me" target="_blank">
+              singhaman21@proton.me
             </Anchor>
           </span>
         </div>
