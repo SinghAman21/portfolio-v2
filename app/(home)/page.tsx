@@ -4,6 +4,7 @@ import HomeLink from '@/components/HomeLink';
 import QuoteBlock from '@/components/QuoteBlock';
 import ReachSection from '@/components/ReachSection';
 import AnimatedSection from '@/components/AnimatedSection';
+import KeyboardHintButton from '@/components/KeyboardHintButton';
 import { Experience, projects } from '@/lib/data';
 import ProjectItem from '@/components/ProjectItem';
 import ExperienceItem from '@/components/ExperienceItem';
@@ -15,6 +16,7 @@ export default function Home() {
 
   return (
     <main className="mb-32 text-gray-700 dark:text-neutral-400">
+      <KeyboardHintButton />
       <Header
         name="Aman Singh"
         location="Mumbai, India."
@@ -49,6 +51,7 @@ export default function Home() {
           label="experience"
           description="Companies I've worked with to deliver software solutions and drive technical growth of the company."
           animationDelay="0.17s"
+          shortcutKey="E"
         />
 
         <div
@@ -73,6 +76,7 @@ export default function Home() {
           label="work"
           description="Batteleground of my personal projects that I've built to learn new technologies."
           animationDelay="0.20s"
+          shortcutKey="P"
         />
         <div
           className="animate-[slideFadeUp_0.35s_ease-out] pl-4 py-4"
@@ -95,6 +99,7 @@ export default function Home() {
           label="writing"
           description="Thoughts, tutorials, and insights on web development, technology, and software engineering."
           animationDelay="0.23s"
+          shortcutKey="B"
         />
         <div
           className="animate-[slideFadeUp_0.35s_ease-out] pl-4 py-4"
@@ -108,6 +113,7 @@ export default function Home() {
         label="about"
         description="Learn more about my journey, background, and what drives me as a developer."
         animationDelay="0.26s"
+        shortcutKey="A"
       />
 
       <ReachSection animationDelay="0.29s" />

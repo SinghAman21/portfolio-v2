@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import Footer from "@/components/footer/footer";
+import KeyboardNavigation from "@/components/KeyboardNavigation";
 import { Instrument_Serif } from "next/font/google";
 import { GeistMono } from 'geist/font/mono';
 import { cn } from "@/lib/utils";
@@ -200,6 +201,7 @@ export default function RootLayout({
 
         </main>
         <Footer />
+        <KeyboardNavigation />
         <SpeedInsights />
         <Analytics />
       </body>
