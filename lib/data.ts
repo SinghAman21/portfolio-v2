@@ -50,7 +50,7 @@ export const projects = [
     title: "Pet Bro",
     year: "2024",
     description:
-        "PetBro is a simple web application to help you find a perfect pet veterinarian in your area. Built with Java Spring Boot and MySQL.",
+        "PetBro is a java servlet web application to help you find a perfect pet veterinarian in your area. Built with Java SDK, Apache Tomcat and MySQL.",
     githubUrl: "https://github.com/SinghAman21/petbro",
   },
   {
