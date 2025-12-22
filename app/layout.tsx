@@ -5,7 +5,6 @@ import KeyboardNavigation from "@/components/KeyboardNavigation";
 import { Instrument_Serif } from "next/font/google";
 import { GeistMono } from 'geist/font/mono';
 import { cn } from "@/lib/utils";
-import Script from "next/script";
 import { SpeedInsights } from "@vercel/speed-insights/next"
 import { Analytics } from "@vercel/analytics/next"
 
@@ -157,8 +156,8 @@ export default function RootLayout({
               "@context": "https://schema.org",
               "@type": "Person",
               name: "Aman Singh",
-              url: "https://www.AmanSingh.me",
-              image: "https://www.AmanSingh.me/og-image.webp",
+              url: "https://www.useraman.me",
+              image: "https://www.useraman.me/og-image.webp",
               sameAs: [
                 "https://x.com/useraman21",
                 "https://github.com/SinghAman21",
@@ -167,9 +166,9 @@ export default function RootLayout({
               ],
               jobTitle: "Full-Stack Software Developer",
               worksFor: {
-                "@type": "Organization",
-                name: "SuperAlign AI",
-                url: "https://www.superalign.ai",
+                "@type": "Freelance",
+                name: "Aman Singh",
+                url: "https://www.useraman.me",
               },
               knowsAbout: [
                 "Next.js",
@@ -178,16 +177,20 @@ export default function RootLayout({
                 "Node.js",
                 "Full-Stack Development",
                 "Web Applications",
+                "AWS",
+                "Docker",
+                "Tailwind CSS",
+                "GraphQL",
+                "PostgreSQL",
+                "MongoDB",
+                "Redis",
+                "Appwrite",
+                "GCP"
               ],
               description:
                 "Aman Singh is a full-stack software developer specializing in Next.js, React, TypeScript, and Node.js, building scalable web applications.",
             }),
           }}
-        />
-        <Script
-          defer
-          data-domain="AmanSingh.me"
-          src="https://webtracker.AmanSingh.me/tracking-script.js"
         />
       </head>
       <body
