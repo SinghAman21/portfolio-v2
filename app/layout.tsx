@@ -15,7 +15,7 @@ const instrumentSerif = Instrument_Serif({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://www.AmanSingh.me/"),
+  metadataBase: new URL("https://www.useraman.me/"),
   title: {
     template: "%s | Aman Singh",
     default: "Aman Singh",
@@ -43,7 +43,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Aman Singh — Full-Stack Web Developer & Software Engineer",
     description: "Aman Singh is a full-stack software developer specializing in Next.js, React, TypeScript, and Node.js. Explore projects, experience, and technical writing.",
-    url: "https://www.AmanSingh.me/",
+    url: "https://www.useraman.me/",
     siteName: "Aman Singh's Portfolio",
     images: [
       {

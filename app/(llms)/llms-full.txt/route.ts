@@ -72,7 +72,7 @@ async function getBlogContent() {
 async function getContent() {
   return `<SYSTEM>This document contains comprehensive information about ${displayName}'s professional profile, portfolio, and blog content. It includes personal details, work experience, projects, and all published blog posts. This data is formatted for consumption by Large Language Models (LLMs) to provide accurate and up-to-date information about ${displayName}'s background, skills, and expertise as a Software Engineer.</SYSTEM>
 
-# AmanSingh.me
+# useraman.me
 
 > A minimal, pixel-perfect dev portfolio, component registry, and blog to showcase my work as a Software Engineer.
 

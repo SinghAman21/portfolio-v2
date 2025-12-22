@@ -7,6 +7,7 @@ function toRfc822Date(dateString: string): string {
   let parsed = new Date(dateString);
   if (isNaN(parsed.getTime())) {
     // Fix common misspelling in content: "Feburary" -> "February"
+    // why not just parse the correct month instead?
     const fixed = dateString.replace(/Feburary/gi, "February");
     parsed = new Date(fixed);
   }

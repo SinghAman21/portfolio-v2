@@ -5,11 +5,11 @@ import { Metadata } from 'next';
 
 export const metadata: Metadata = {
   title: "Experience — Professional Work History of Aman Singh",
-  description: "Professional experience of Aman Singh as a software engineer at SuperAlign AI, DataFoundry, Dank, and more. Full-stack development roles and achievements.",
+  description: "Professional experience of Aman Singh as a software engineer at EaslegalPartners and many early startups more. Full-stack development roles and achievements.",
   openGraph: {
     title: "Experience — Professional Work History of Aman Singh",
-    description: "Professional experience of Aman Singh as a software engineer at SuperAlign AI, DataFoundry, Dank, and more. Full-stack development roles and achievements.",
-    url: "https://www.AmanSingh.me/experience",
+    description: "Professional experience of Aman Singh as a software engineer at EaslegalPartners and many early startups more. Full-stack development roles and achievements.",
+    url: "https://www.useraman.me/experience",
     images: ["/og-image.webp"],
     siteName: "Aman Singh",
     locale: "en_US",
@@ -19,7 +19,7 @@ export const metadata: Metadata = {
     title: "Experience — Professional Work History of Aman Singh",
     card: "summary_large_image",
     images: ["/og-image.webp"],
-    description: "Professional experience of Aman Singh as a software engineer at SuperAlign AI, DataFoundry, Dank, and more. Full-stack development roles and achievements.",
+    description: "Professional experience of Aman Singh as a software engineer at EaslegalPartners and many early startups more. Full-stack development roles and achievements.",
   },
   robots: {
     index: true,
@@ -33,7 +33,7 @@ export const metadata: Metadata = {
     },
   },
   alternates: {
-    canonical: "https://www.AmanSingh.me/experience",
+    canonical: "https://www.useraman.me/experience",
   },
 };
 export default function HomeLayout({ children }: PropsWithChildren) {
