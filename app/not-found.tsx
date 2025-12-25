@@ -324,7 +324,7 @@ export default function NotFound() {
         <div className="mt-2 flex flex-wrap gap-2">
           <span className="whitespace-nowrap">
             <span>connect on </span>
-            <Anchor href="https://x.com/useraman21" target="_blank">
+            <Anchor href="https://x.com/SinghAman21_" target="_blank">
               {'𝕏'}
             </Anchor>
             <span className="mx-1 text-neutral-400/50">·</span>

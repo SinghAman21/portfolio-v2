@@ -17,7 +17,7 @@ ${aboutText}
 ## Social Links
 
 - [GitHub](https://github.com/SinghAman21)
-- [Twitter/X](https://x.com/useraman21)
+- [Twitter/X](https://x.com/SinghAman21_)
 - [LinkedIn](https://www.linkedin.com/in/aman-singh21)
 - [Peerlist](https://peerlist.io/singhaman21)
 

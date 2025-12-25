@@ -12,7 +12,7 @@ export default function ReachSection({ animationDelay = '1.2s' }: ReachSectionPr
       <div className="mt-2 flex flex-wrap gap-2">
         <span className="whitespace-nowrap text-gray-700 dark:text-neutral-400">
           <span>connect on </span>
-          <Anchor href="https://x.com/useraman21" target="_blank" className="transition-all duration-200 hover:opacity-70 hover:scale-105 inline-block">
+          <Anchor href="https://x.com/SinghAman21_" target="_blank" className="transition-all duration-200 hover:opacity-70 hover:scale-105 inline-block">
             {'𝕏'}
           </Anchor>
           <span className="mx-1 text-gray-400 dark:text-neutral-400/50 transition-opacity duration-200">·</span>

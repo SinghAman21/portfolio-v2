@@ -32,9 +32,9 @@ export const metadata: Metadata = {
     title: 'Aman Singh',
     description: 'Aman Singh is a developer who loves to code and build things.',
     images: ['/og-image.webp'],
-    creator: '@useraman21',
-    site: '@useraman21',
-    siteId: '@useraman21',
+    creator: '@SinghAman21_',
+    site: '@SinghAman21_',
+    siteId: '@SinghAman21_',
   },
   alternates: {
     canonical: 'https://www.useraman.me',
