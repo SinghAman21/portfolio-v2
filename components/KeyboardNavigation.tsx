@@ -50,7 +50,7 @@ export default function KeyboardNavigation() {
 
   const handleRouteNavigation = useCallback(
     (e: KeyboardEvent) => {
-      if (!isModifierKey(e)) return null;
+      // if (!isModifierKey(e)) return null;
 
       const key = e.key.toLowerCase();
       const route = routes.find((r) => r.key.toLowerCase() === key);
