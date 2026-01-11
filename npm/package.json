@@ -1,0 +1,17 @@
+{
+  "name": "singhaman21",
+  "version": "1.0.0",
+  "description": "personal site TUI version",
+  "main": "index.js",
+  "bin": {
+    "singhaman": "./index.js",
+    "amansingh": "./index.js",
+    "amansingh21": "./index.js",
+    "singhaman21": "./index.js"
+  },
+  "scripts": {
+    "start": "node index.js"
+  },
+  "author": "SinghAman21",
+  "license": "MIT"
+}

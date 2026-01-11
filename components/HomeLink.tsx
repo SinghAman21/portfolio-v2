@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { cn, getModifierKeyDisplay } from '@/lib/utils';
+import { cn } from '@/lib/utils';
 import CornerMarkers from '@/components/CornerMarkers';
 
 interface HomeLinkProps {
@@ -40,10 +40,8 @@ export default function HomeLink({ href, label, description, animationDelay = '0
               'transition-opacity duration-200',
               'flex-shrink-0'
             )}
-            title={`Press ${getModifierKeyDisplay()} + ${shortcutKey} to navigate`}
+            title={`Press ${shortcutKey} to navigate`}
           >
-            <span className="text-[10px]">{getModifierKeyDisplay()}</span>
-            <span>+</span>
             <span>{shortcutKey}</span>
           </kbd>
         )}

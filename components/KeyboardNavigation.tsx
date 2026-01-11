@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
-import { cn, getModifierKeyDisplay } from '@/lib/utils';
+import { cn } from '@/lib/utils';
 
 interface Route {
   path: string;
@@ -108,13 +108,13 @@ export default function KeyboardNavigation() {
           navigateToRoute(routes[selectedIndex]);
           return;
         }
-        // Allow direct navigation with Ctrl/Cmd + route keys even when dialog is open
+        // Allow direct navigation with route keys even when dialog is open
         if (handleRouteNavigation(e)) {
           return;
         }
       }
 
-      // Handle Ctrl/Cmd + key shortcuts (only when dialog is closed)
+      // Handle route key shortcuts (only when dialog is closed)
       if (!isDialogOpen) {
         handleRouteNavigation(e);
       }
@@ -203,8 +203,6 @@ export default function KeyboardNavigation() {
                       'flex items-center gap-1'
                     )}
                   >
-                    <span>{getModifierKeyDisplay()}</span>
-                    <span>+</span>
                     <span>{route.key}</span>
                   </kbd>
                 </div>
