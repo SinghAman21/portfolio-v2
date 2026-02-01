@@ -12,7 +12,7 @@ import BlogList from '@/components/blog/blog-list';
 
 export default function Home() {
   const recentProjects = projects.slice(0, 3);
-  const recentExperiences = Experience.slice(0, 3);
+  const recentExperiences = Experience.slice(0, 2);
 
   return (
     <main className="mb-32 text-gray-700 dark:text-neutral-400">

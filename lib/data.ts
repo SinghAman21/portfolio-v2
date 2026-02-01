@@ -1,4 +1,29 @@
+import { title } from "process";
+
 export const projects = [
+  {
+    title: "PeakMark",
+    year: "2026",
+    description: 
+    " A minimalist badge generator and remixer where developers can create and customize beautiful badges for their projects to grab eyes as much as possible. Built with better-t-stack and React Query.",
+    demoUrl: "https://peakmark.vercel.app",
+    githubUrl: "https://github.com/SinghAman21/peakmark",
+  },
+  {
+    title:"cull",
+    year: "2026",
+    description: 
+    " A CLI tool to help you clean up your npm packages by removing unused dependencies from your file system. It analyzes your files with the regrex patterns to identify files that are not being used and removes them, helping you maintain a lean and efficient device.",
+    demoUrl: "https://www.npmjs.com/package/cull",
+    githubUrl: "https://github.com/SinghAman21/cull",
+  },
+    {
+    title:"FormFuzz",
+    year: "2026",
+    description: "FormFuzz is an automated google form filler that uses AI to generate realistic responses based on the form questions. Built with Google App Script, Node.js, and Gemini API, it streamlines the process of filling out lengthy forms by providing accurate and contextually relevant answers or generate a dummy data for surveys.",
+    demoUrl: "https://formfuzz.vercel.app",
+    githubUrl: "https://github.com/SinghAman21/formfuzz",
+  },
   {
     title: "SilentParcel",
     year: "2025",
@@ -86,5 +111,16 @@ export const Experience = [
     ],
     companySite:
       "https://gdg.community.dev/gdg-on-campus-vidyalankar-institute-of-technology-mumbai-india/"      
+  },
+  {
+    title: "Freelance Developer",
+    year: "December 2025",
+    company: "Self-Employed",
+    description: [
+      "Developed an MVP for an education platform in an early-stage startup, enabling streamlined user engagement and functionality.",
+      "Implemented Role-Based Access Control (RBAC) to enhance security and user management for students, teachers, and administrators.",
+      "Designed a comprehensive platform allowing teachers to manage classes, students to track progress, and integrated a read-only audit log to monitor all user actions.",
+    ],
+    companySite:""
   }
 ];

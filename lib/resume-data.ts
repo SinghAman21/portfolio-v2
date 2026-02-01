@@ -66,7 +66,7 @@ export const resumeProjects: ProjectItem[] = [
   },
   {
     title: "Graphex",
-    techStack: "(Next.js, TypeScript, Tailwind CSS, Prisma, Github OAuth, Shadcn UI, DodoPayments)",
+    techStack: "(Next.js, TypeScript, Tailwind CSS, tRPC, Prisma, Github OAuth, Shadcn UI, DodoPayments)",
     points: [
       "• Integrates with GitHub via secure OAuth, enabling seamless connection of your account using GraphQL API without sharing credentials.",
       "• Implemented an automated notification system with email (Resend API) and browser push notifications (Web Push API/VAPID), scheduled via GitHub Actions cron jobs, with timezone-aware delivery and user preference management.",
@@ -74,12 +74,12 @@ export const resumeProjects: ProjectItem[] = [
     ],
   },
   {
-    title: "template-boss",
-    techStack: "(JavaScript, Node.js, npm)",
+    title: "PeakMark",
+    techStack: "(Next.js, Node.js, React Query, Turbo Repo, S3)",
     points: [
-      "• Acts as a starter-kit system: you choose a template and get a preconfigured setup instead of wiring tooling from scratch",
-      "• Automated boilerplate generation for JavaScript/TypeScript projects, reducing initial setup time and promoting standardized configurations across teams.",
-      "• Built Template Boss, an npm-based template CLI providing production-ready JS/TS starter templates to accelerate project setup and enforce consistent tooling.",
+      "• Built a web application for creating and exporting SVG badges for GitHub READMEs using Next.js 16, tRPC, and TypeScript. Features include a real-time preview, 6+ badge presets, and a dynamic icon picker.",
+      "• Created a high-performance monorepo with Turborepo, incorporating an isolated API layer, database, and shared packages. Used tRPC for type-safe communication and optimized the build pipeline. Deployed on Vercel with analytics.",
+      "• Implemented query-based badge generation for shareable URLs and one-click exports, allowing segment-level customization. Developed a preset gallery for rapid iteration and dynamic SVG rendering with custom colors, icons, and text positioning.",
     ],
   },
   {
