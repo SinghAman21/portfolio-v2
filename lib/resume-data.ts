@@ -66,25 +66,25 @@ export const resumeProjects: ProjectItem[] = [
   },
   {
     title: "Graphex",
-    techStack: "(Next.js, TypeScript, Tailwind CSS, tRPC, Prisma, Github OAuth, Shadcn UI, DodoPayments)",
+    techStack: "(Next.js, TypeScript, Tailwind CSS, tRPC, Prisma, Github OAuth, Shadcn UI, Resend, DodoPayments)",
     points: [
       "• Integrates with GitHub via secure OAuth, enabling seamless connection of your account using GraphQL API without sharing credentials.",
-      "• Implemented an automated notification system with email (Resend API) and browser push notifications (Web Push API/VAPID), scheduled via GitHub Actions cron jobs, with timezone-aware delivery and user preference management.",
-      "• Architected a scalable backend with RESTful API routes, server-side rendering, scheduled cron jobs for daily reminders, and a subscription-based billing system with free trial management, deployed to production.",
+      "• Implemented an automated notification system with email and browser push notifications (Web Push API/VAPID), scheduled via cron jobs, with timezone-aware delivery management.",
+      "• Architected a scalable backend with tRPC type-safe API routes, server-side rendering, scheduled cron jobs for daily reminders, and a subscription-based billing system with free trial management, deployed to production.",
     ],
   },
   {
     title: "PeakMark",
-    techStack: "(Next.js, Node.js, React Query, Turbo Repo, S3)",
+    techStack: "(Next.js, React Query, Turbo Repo, S3, Vercel Deployment, tRPC, TypeScript)",
     points: [
-      "• Built a web application for creating and exporting SVG badges for GitHub READMEs using Next.js 16, tRPC, and TypeScript. Features include a real-time preview, 6+ badge presets, and a dynamic icon picker.",
+      "• Built a web application for creating and exporting SVG badges for Project Showcase and READMEs using Next.js 16, tRPC, and TypeScript. Features include a real-time preview, 6+ badge presets, and a dynamic icon picker.",
       "• Created a high-performance monorepo with Turborepo, incorporating an isolated API layer, database, and shared packages. Used tRPC for type-safe communication and optimized the build pipeline. Deployed on Vercel with analytics.",
-      "• Implemented query-based badge generation for shareable URLs and one-click exports, allowing segment-level customization. Developed a preset gallery for rapid iteration and dynamic SVG rendering with custom colors, icons, and text positioning.",
+      "• Implemented query-based badge generation for shareable URLs and one-click exports, allowing segment-level customization. Developed a preset gallery for rapid iteration.",
     ],
   },
   {
     title: "SVG Preview (vs-code/cursor extension)",
-    techStack: "(TypeScript, vs-code api)",
+    techStack: "(TypeScript, VS Code API)",
     points: [
       "• Built SVG Preview, a browser-based tool to instantly render and inspect SVG files directly from local uploads or pasted SVG code, improving designer–developer collaboration.",
       "• Implemented a responsive, minimal UI with live preview so developers can quickly iterate on SVG icons, logos, and illustrations without opening heavy design tools.",
@@ -109,7 +109,7 @@ export const volunteerExperience: VolunteerExperienceItem = {
   location: "Hybrid",
   period: "2025 – Present",
   points: [
-    "• Collaborated with diverse teams to conduct many events and workshops where i was directly engaging students and contributing to an increment in technical awareness.",
+    "• Collaborated with diverse teams to conduct many events and workshops where I am directly engaging students and contributing to an increment in technical awareness.",
   ],
 };
 
