@@ -7,11 +7,12 @@ export default function KeyboardHintButton() {
     <button
       className={cn(
         'fixed bottom-6 right-6 z-40',
+        'hidden lg:flex',
         'px-3 py-2 rounded-md',
         'bg-white/90 dark:bg-neutral-900/90',
         'border border-gray-200 dark:border-neutral-800',
         'shadow-lg backdrop-blur-sm',
-        'flex items-center gap-2',
+        'items-center gap-2',
         'text-xs text-gray-600 dark:text-neutral-400',
         'hover:bg-white dark:hover:bg-neutral-900',
         'transition-all duration-200',

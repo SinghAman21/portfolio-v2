@@ -16,7 +16,7 @@ export default function ExperienceItem({ title, year, company, description, comp
       <div className="flex justify-between items-start mb-1">
         <div
           className={cn(
-            'group flex items-center justify-between gap-4 w-full',
+            'group flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-4 w-full',
             'hover:outline-[0.5px] outline-offset-[6px] hover:outline-gray-400/50 dark:hover:outline-neutral-600/50 hover:[&>h3]:text-gray-900 dark:hover:[&>h3]:text-white hover:[&>span]:text-gray-900 dark:hover:[&>span]:text-white border-0',
             'relative'
           )}
