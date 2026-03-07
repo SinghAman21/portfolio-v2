@@ -101,6 +101,17 @@ export const Experience = [
     companySite: "https://www.easlegalspartners.com",
   },
   {
+    title: "Cloud Security Research Intern",
+    year: "December 2025 - February 2026",
+    company: "Vidyalankar Institute of Technology",
+    description : [
+    "Reverse-engineered vulnerable AWS infra (public RDS/S3, plaintext creds); Terraform-hardened to private subnets, ALB TLS, KMS encryption, Secrets Manager—100% attack sim mitigation.",
+    "Built prod-grade Node.js+PostgreSQL AWS stack: custom IAM (prefix-specific S3/KMS), EB/RDS isolation, GuardDuty+CloudTrail logging, <5min reproducible deployments.",
+    "Simulated SQLi/priv-esc attacks; validated via tf plan, CW alarms, Config rules—achieving compliant, drift-proof infrastructure.",
+    ],
+    companySite: "https://vit.edu.in"
+  },
+  {
     title: "OSS LEAD",
     year: "July 2025 – Present",
     company: "GDG",
@@ -111,17 +122,6 @@ export const Experience = [
     ],
     companySite:
       "https://gdg.community.dev/gdg-on-campus-vidyalankar-institute-of-technology-mumbai-india/"      
-  },
-  {
-    title: "Cloud Security Research Intern",
-    year: "December 2025 - February 2026",
-    company: "Vidyalankar Institute of Technology",
-    description : [
-    "Reverse-engineered vulnerable AWS infra (public RDS/S3, plaintext creds); Terraform-hardened to private subnets, ALB TLS, KMS encryption, Secrets Manager—100% attack sim mitigation.",
-    "Built prod-grade Node.js+PostgreSQL AWS stack: custom IAM (prefix-specific S3/KMS), EB/RDS isolation, GuardDuty+CloudTrail logging, <5min reproducible deployments.",
-    "Simulated SQLi/priv-esc attacks; validated via tf plan, CW alarms, Config rules—achieving compliant, drift-proof infrastructure.",
-    ],
-    companySite: "https://vit.edu.in"
   },
   {
     title: "Freelance Developer",

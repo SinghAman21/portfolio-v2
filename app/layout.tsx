@@ -194,7 +194,7 @@ export default function RootLayout({
         />
           <script 
           data-site-hex="wj9es3ceo4i5" 
-          src="https://wa-be.vercel.app/ultrafree.js"
+          src="https://wa-be.vercel.app/public/ultrafree.js"
           async
         />
       </head>
