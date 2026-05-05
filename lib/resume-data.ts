@@ -42,6 +42,17 @@ export interface EducationItem {
 // Transform Experience data for resume
 export const resumeWorkExperience: WorkExperienceItem[] = [
   {
+    company: "Vidyalankar Institute of Technology",
+    title: "Cloud Security Research Intern",
+    location: "Mumbai, Maharashtra",
+    period: "December 2025 - February 2026",
+    points: [
+      "• Reverse-engineered vulnerable AWS infra (public RDS/S3, plaintext creds); Terraform-hardened to private subnets, ALB TLS, KMS encryption, Secrets Manager—100% attack sim mitigation.",
+      "• Built prod-grade Node.js+PostgreSQL AWS stack: custom IAM (prefix-specific S3/KMS), EB/RDS isolation, GuardDuty+CloudTrail logging, <5min reproducible deployments.",
+      "• Simulated SQLi/priv-esc attacks; validated via tf plan, CW alarms, Config rules—achieving compliant, drift-proof infrastructure.",
+    ],
+  },
+  {
     company: "EasLegal Partners",
     title: "Full Stack Developer Intern",
     location: "Remote",
