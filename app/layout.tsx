@@ -193,8 +193,8 @@ export default function RootLayout({
           }}
         />
           <script 
-          data-site-hex="wj9es3ceo4i5" 
-          src="https://pulsev0.vercel.app/ultrafree.js"
+          data-site-hex="u04ilqv8wsnt" 
+          src="https://pulsev0.vercel.app/free.js"
           async
         />
       </head>
