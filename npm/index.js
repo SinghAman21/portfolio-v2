@@ -52,6 +52,6 @@ routes.forEach(r => {
 
 console.log(`\n${colors.brightGreen}${colors.bold}🌐 → Connect${colors.reset}`);
 console.log(`  𝕏 ${createHyperlink('@SinghAman21_', 'https://x.com/SinghAman21_')}  💻 ${createHyperlink('SinghAman21', 'https://github.com/SinghAman21')}`);
-console.log(`  ✉️  ${createHyperlink('singhaman21@proton.me', 'mailto:singhaman21@proton.me')}`);
+console.log(`  ✉️  ${createHyperlink('work.singhaman@gmail.com', 'mailto:work.singhaman@gmail.com')}`);
 
 console.log(`\n${colors.brightWhite}${colors.italic}"You shall work hard enough to become better than yesterday's you"${colors.reset}`);

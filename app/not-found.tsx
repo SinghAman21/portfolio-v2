@@ -342,8 +342,8 @@ export default function NotFound() {
           </span>
           <span>
             — or send me an email at{" "}
-            <Anchor href="mailto:singhaman21@proton.me" target="_blank">
-              singhaman21@proton.me
+            <Anchor href="mailto:work.singhaman@gmail.com" target="_blank">
+              work.singhaman@gmail.com
             </Anchor>
           </span>
         </div>
