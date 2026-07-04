@@ -1,15 +1,17 @@
-import { PropsWithChildren } from 'react';
-import { GeistMono } from 'geist/font/mono';
-import { cn } from '@/lib/utils';
-import { Metadata } from 'next';
+import { PropsWithChildren } from "react";
+import { GeistMono } from "geist/font/mono";
+import { cn } from "@/lib/utils";
+import { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "About — Aman Singh",
-  description: "Learn about Aman Singh's journey as a full-stack developer, from starting with Python and Java to building scalable web applications with Next.js, React, and Node.js.",
+  description:
+    "Learn about Aman Singh's journey as a full-stack developer, from starting with Python and Java to building scalable web applications with Next.js, React, and Node.js.",
   openGraph: {
     title: "About — Aman Singh",
-    description: "Learn about Aman Singh's journey as a full-stack developer, from starting with Python and Java to building scalable web applications with Next.js, React, and Node.js.",
-    url: "https://www.useraman.me/about",
+    description:
+      "Learn about Aman Singh's journey as a full-stack developer, from starting with Python and Java to building scalable web applications with Next.js, React, and Node.js.",
+    url: "https://www.singhaman.me/about",
     images: ["/og-image.webp"],
     siteName: "Aman Singh",
     locale: "en_US",
@@ -19,7 +21,8 @@ export const metadata: Metadata = {
     title: "About — Aman Singh",
     card: "summary_large_image",
     images: ["/og-image.webp"],
-    description: "Learn about Aman Singh's journey as a full-stack developer, from starting with Python and Java to building scalable web applications with Next.js, React, and Node.js.",
+    description:
+      "Learn about Aman Singh's journey as a full-stack developer, from starting with Python and Java to building scalable web applications with Next.js, React, and Node.js.",
   },
   robots: {
     index: true,
@@ -33,7 +36,7 @@ export const metadata: Metadata = {
     },
   },
   alternates: {
-    canonical: "https://www.useraman.me/about",
+    canonical: "https://www.singhaman.me/about",
   },
 };
 
@@ -42,8 +45,9 @@ export default function AboutLayout({ children }: PropsWithChildren) {
     <main
       className={cn(
         GeistMono.className,
-        'text-[13px] [text-rendering:geometricPrecision] container'
-      )}>
+        "text-[13px] [text-rendering:geometricPrecision] container",
+      )}
+    >
       {children}
     </main>
   );

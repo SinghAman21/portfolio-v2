@@ -12,7 +12,6 @@ export default function ResumeHeader() {
       <div className="space-y-2 text-gray-600 dark:text-neutral-400">
         <p>
           Mumbai |{" "}
-
           <Link
             href="mailto:work.singhaman@gmail.com"
             className="text-gray-700 dark:text-stone-300 underline decoration-gray-500 dark:decoration-stone-400 decoration-[0.5px] underline-offset-4 transition-colors hover:text-gray-900 dark:hover:text-stone-200"
@@ -33,7 +32,7 @@ export default function ResumeHeader() {
           </span>
           <span>
             <Link
-              href="https://useraman.me"
+              href="https://singhaman.me"
               target="_blank"
               className="text-gray-700 dark:text-stone-300 underline decoration-gray-500 dark:decoration-stone-400 decoration-[0.5px] underline-offset-4 transition-colors hover:text-gray-900 dark:hover:text-stone-200 flex items-center gap-1"
             >
@@ -57,11 +56,7 @@ export default function ResumeHeader() {
               target="_blank"
               className="text-gray-700 dark:text-stone-300 underline decoration-gray-500 dark:decoration-stone-400 decoration-[0.5px] underline-offset-4 transition-colors hover:text-gray-900 dark:hover:text-stone-200 flex items-center gap-1"
             >
-              <Image
-                src={PeerlistIcon}
-                alt="Peerlist"
-                className="w-4 h-4"
-              />
+              <Image src={PeerlistIcon} alt="Peerlist" className="w-4 h-4" />
               Peerlist
             </Link>
           </span>

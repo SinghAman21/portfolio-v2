@@ -1,24 +1,26 @@
-import { PropsWithChildren } from 'react';
-import { GeistMono } from 'geist/font/mono';
-import { cn } from '@/lib/utils';
-
+import { PropsWithChildren } from "react";
+import { GeistMono } from "geist/font/mono";
+import { cn } from "@/lib/utils";
 
 export const metadata = {
-  title: 'Resume — Aman Singh, Full-Stack Software Developer',
-  description: 'Download or view the professional resume of Aman Singh. Skills in Next.js, React, TypeScript, Node.js, and full-stack web development. Based in India.',
+  title: "Resume — Aman Singh, Full-Stack Software Developer",
+  description:
+    "Download or view the professional resume of Aman Singh. Skills in Next.js, React, TypeScript, Node.js, and full-stack web development. Based in India.",
   openGraph: {
-    title: 'Resume — Aman Singh, Full-Stack Software Developer',
-    description: 'Download or view the professional resume of Aman Singh. Skills in Next.js, React, TypeScript, Node.js, and full-stack web development. Based in India.',
-    images: ['/og-image.webp'],
-    url: 'https://www.useraman.me/resume',
+    title: "Resume — Aman Singh, Full-Stack Software Developer",
+    description:
+      "Download or view the professional resume of Aman Singh. Skills in Next.js, React, TypeScript, Node.js, and full-stack web development. Based in India.",
+    images: ["/og-image.webp"],
+    url: "https://www.singhaman.me/resume",
   },
   twitter: {
-    title: 'Resume — Aman Singh, Full-Stack Software Developer',
-    description: 'Download or view the professional resume of Aman Singh. Skills in Next.js, React, TypeScript, Node.js, and full-stack web development. Based in India.',
-    images: ['/og-image.webp'],
+    title: "Resume — Aman Singh, Full-Stack Software Developer",
+    description:
+      "Download or view the professional resume of Aman Singh. Skills in Next.js, React, TypeScript, Node.js, and full-stack web development. Based in India.",
+    images: ["/og-image.webp"],
   },
   alternates: {
-    canonical: 'https://www.useraman.me/resume',
+    canonical: "https://www.singhaman.me/resume",
   },
   robots: {
     index: true,
@@ -31,16 +33,16 @@ export const metadata = {
       "max-snippet": -1,
     },
   },
-}
-
+};
 
 export default function HomeLayout({ children }: PropsWithChildren) {
   return (
     <main
       className={cn(
         GeistMono.className,
-        'text-[13px] [text-rendering:geometricPrecision] container'
-      )}>
+        "text-[13px] [text-rendering:geometricPrecision] container",
+      )}
+    >
       {children}
     </main>
   );

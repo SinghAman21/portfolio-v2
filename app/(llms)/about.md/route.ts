@@ -12,7 +12,7 @@ ${aboutText}
 
 - Name: Aman Singh
 - Display Name: Aman Singh
-- Website: https://useraman.me
+- Website: https://singhaman.me
 
 ## Social Links
 

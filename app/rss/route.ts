@@ -31,7 +31,11 @@ function getYearDate(value: string | undefined): string {
   return new Date().toUTCString();
 }
 
-function generateRSSFeed(posts: Post[], blogUrl: string, portfolioUrl: string): string {
+function generateRSSFeed(
+  posts: Post[],
+  blogUrl: string,
+  portfolioUrl: string,
+): string {
   const blogItems = posts
     .map((post) => {
       const postUrl = `${blogUrl}/${post.slug}`;
@@ -82,7 +86,11 @@ function generateRSSFeed(posts: Post[], blogUrl: string, portfolioUrl: string): 
         ? exp.companySite!
         : `${portfolioUrl}/experience`;
     const title = escapeCdata(`${exp.title} at ${exp.company}`);
-    const description = escapeCdata(Array.isArray(exp.description) ? exp.description.join(" ") : exp.description ?? "");
+    const description = escapeCdata(
+      Array.isArray(exp.description)
+        ? exp.description.join(" ")
+        : (exp.description ?? ""),
+    );
     const pubDate = getYearDate(exp.year);
 
     return `
@@ -110,7 +118,7 @@ function generateRSSFeed(posts: Post[], blogUrl: string, portfolioUrl: string): 
 </rss>`;
 }
 
-const baseUrl = "https://useraman.me";
+const baseUrl = "https://singhaman.me";
 
 export const GET = async () => {
   const posts = await getAllPosts();
