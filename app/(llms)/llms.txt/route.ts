@@ -1,13 +1,13 @@
 import { getAllPosts } from "@/lib/mdx";
 
-const baseUrl = "https://useraman.me";
+const baseUrl = "https://singhaman.me";
 
 export const dynamic = "force-static";
 
 export async function GET() {
   const allPosts = await getAllPosts();
 
-  const content = `# useraman.me
+  const content = `# singhaman.me
 
 > A minimal, pixel-perfect dev portfolio, component registry, and blog to showcase my work as a Software Engineer.
 

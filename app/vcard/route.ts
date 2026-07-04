@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import VCard from "vcard-creator";
 import { Experience } from "@/lib/data";
 
-const baseUrl = "https://useraman.me";
+const baseUrl = "https://singhaman.me";
 
 // User information matching the portfolio
 const userInfo = {
@@ -29,8 +29,8 @@ export async function GET() {
     .addURL(userInfo.website);
 
   // Add current job from experience
-  const currentJob = Experience.find((exp) =>
-    exp.year.includes("Present") || exp.year.includes("2025")
+  const currentJob = Experience.find(
+    (exp) => exp.year.includes("Present") || exp.year.includes("2025"),
   );
 
   if (currentJob) {

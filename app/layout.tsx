@@ -3,10 +3,10 @@ import "./globals.css";
 import Footer from "@/components/footer/footer";
 import KeyboardNavigation from "@/components/KeyboardNavigation";
 import { Instrument_Serif } from "next/font/google";
-import { GeistMono } from 'geist/font/mono';
+import { GeistMono } from "geist/font/mono";
 import { cn } from "@/lib/utils";
-import { SpeedInsights } from "@vercel/speed-insights/next"
-import { Analytics } from "@vercel/analytics/next"
+import { SpeedInsights } from "@vercel/speed-insights/next";
+import { Analytics } from "@vercel/analytics/next";
 
 const instrumentSerif = Instrument_Serif({
   subsets: ["latin"],
@@ -15,12 +15,13 @@ const instrumentSerif = Instrument_Serif({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://www.useraman.me/"),
+  metadataBase: new URL("https://www.singhaman.me/"),
   title: {
     template: "%s | Aman Singh",
     default: "Aman Singh",
   },
-  description: "Aman Singh is a full-stack software developer specializing in Next.js, React, TypeScript, and Node.js. Explore projects, experience, and technical writing.",
+  description:
+    "Aman Singh is a full-stack software developer specializing in Next.js, React, TypeScript, and Node.js. Explore projects, experience, and technical writing.",
   keywords: [
     "developer",
     "web",
@@ -38,12 +39,13 @@ export const metadata: Metadata = {
     "portfolio",
     "projects",
     "blog",
-    "India"
+    "India",
   ],
   openGraph: {
     title: "Aman Singh — Full-Stack Web Developer & Software Engineer",
-    description: "Aman Singh is a full-stack software developer specializing in Next.js, React, TypeScript, and Node.js. Explore projects, experience, and technical writing.",
-    url: "https://www.useraman.me/",
+    description:
+      "Aman Singh is a full-stack software developer specializing in Next.js, React, TypeScript, and Node.js. Explore projects, experience, and technical writing.",
+    url: "https://www.singhaman.me/",
     siteName: "Aman Singh's Portfolio",
     images: [
       {
@@ -133,12 +135,11 @@ export const metadata: Metadata = {
     creator: "@SinghAman21_",
     site: "@SinghAman21_",
     siteId: "@SinghAman21_",
-    description: "Aman Singh is a full-stack software developer specializing in Next.js, React, TypeScript, and Node.js. Explore projects, experience, and technical writing.",
-    images: ["/og-image.webp"]
+    description:
+      "Aman Singh is a full-stack software developer specializing in Next.js, React, TypeScript, and Node.js. Explore projects, experience, and technical writing.",
+    images: ["/og-image.webp"],
   },
 };
-
-
 
 export default function RootLayout({
   children,
@@ -156,8 +157,8 @@ export default function RootLayout({
               "@context": "https://schema.org",
               "@type": "Person",
               name: "Aman Singh",
-              url: "https://www.useraman.me",
-              image: "https://www.useraman.me/og-image.webp",
+              url: "https://www.singhaman.me",
+              image: "https://www.singhaman.me/og-image.webp",
               sameAs: [
                 "https://x.com/SinghAman21_",
                 "https://github.com/SinghAman21",
@@ -168,7 +169,7 @@ export default function RootLayout({
               worksFor: {
                 "@type": "Freelance",
                 name: "Aman Singh",
-                url: "https://www.useraman.me",
+                url: "https://www.singhaman.me",
               },
               knowsAbout: [
                 "Next.js",
@@ -185,15 +186,15 @@ export default function RootLayout({
                 "MongoDB",
                 "Redis",
                 "Appwrite",
-                "GCP"
+                "GCP",
               ],
               description:
                 "Aman Singh is a full-stack software developer specializing in Next.js, React, TypeScript, and Node.js, building scalable web applications.",
             }),
           }}
         />
-          <script 
-          data-site-hex="u04ilqv8wsnt" 
+        <script
+          data-site-hex="u04ilqv8wsnt"
           src="https://pulsev0.vercel.app/free.js"
           async
         />
@@ -201,13 +202,12 @@ export default function RootLayout({
       <body
         className={cn(
           GeistMono.variable,
-          'flex min-h-screen mx-auto flex-col font-mono text-sm',
-          'bg-white dark:bg-neutral-950',
-          'text-gray-900 dark:text-neutral-100'
-        )}>
-        <main className="flex-1 pt-24">{children}
-
-        </main>
+          "flex min-h-screen mx-auto flex-col font-mono text-sm",
+          "bg-white dark:bg-neutral-950",
+          "text-gray-900 dark:text-neutral-100",
+        )}
+      >
+        <main className="flex-1 pt-24">{children}</main>
         <Footer />
         <KeyboardNavigation />
         <SpeedInsights />

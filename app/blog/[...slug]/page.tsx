@@ -1,5 +1,5 @@
-import { notFound } from "next/navigation"
-import { getAllPosts, getPostBySlug } from "@/lib/mdx"
+import { notFound } from "next/navigation";
+import { getAllPosts, getPostBySlug } from "@/lib/mdx";
 import { CustomMDX } from "@/components/mdx";
 import BackNavigation from "@/components/back-navigation";
 
@@ -10,13 +10,13 @@ export async function generateMetadata({
 }) {
   const { slug } = await params;
   try {
-    const slugPath = slug.join("/")
-    const post = await getPostBySlug(slugPath)
+    const slugPath = slug.join("/");
+    const post = await getPostBySlug(slugPath);
 
     if (!post) {
       return {
         title: "Post Not Found",
-      }
+      };
     }
 
     return {
@@ -25,7 +25,7 @@ export async function generateMetadata({
       openGraph: {
         title: `${post.title} | Aman Singh`,
         description: post.excerpt,
-        url: `https://www.useraman.me/blog/${slugPath}`,
+        url: `https://www.singhaman.me/blog/${slugPath}`,
         images: ["/og-image.webp"],
         siteName: "Aman Singh",
         locale: "en_US",
@@ -37,37 +37,41 @@ export async function generateMetadata({
         images: ["/og-image.jpg"],
         description: post.excerpt,
       },
-    }
+    };
   } catch (error) {
-    console.error("Error generating metadata:", error)
+    console.error("Error generating metadata:", error);
     return {
       title: "Error",
-    }
+    };
   }
 }
 
 export async function generateStaticParams() {
   try {
-    const posts = await getAllPosts()
+    const posts = await getAllPosts();
 
     return posts.map((post) => ({
       slug: post.slug.split("/"),
-    }))
+    }));
   } catch (error) {
-    console.error("Error generating static params:", error)
-    return []
+    console.error("Error generating static params:", error);
+    return [];
   }
 }
 
-export default async function Page({ params }: { params: Promise<{ slug: string[] }> }) {
+export default async function Page({
+  params,
+}: {
+  params: Promise<{ slug: string[] }>;
+}) {
   const { slug } = await params;
 
   try {
-    const slugPath = slug.join("/")
-    const post = await getPostBySlug(slugPath)
+    const slugPath = slug.join("/");
+    const post = await getPostBySlug(slugPath);
 
     if (!post) {
-      notFound()
+      notFound();
     }
 
     return (
@@ -75,23 +79,31 @@ export default async function Page({ params }: { params: Promise<{ slug: string[
         <BackNavigation href="/blog">back</BackNavigation>
 
         <header className="mt-6 mb-8">
-          <h1 className="text-gray-900 dark:text-neutral-100 text-xl font-medium mb-2">{post.title}</h1>
-          <p className="text-gray-500 dark:text-neutral-500 text-sm">{post.date}</p>
+          <h1 className="text-gray-900 dark:text-neutral-100 text-xl font-medium mb-2">
+            {post.title}
+          </h1>
+          <p className="text-gray-500 dark:text-neutral-500 text-sm">
+            {post.date}
+          </p>
         </header>
 
         <article className="prose prose-neutral max-w-none dark:prose-invert">
           <CustomMDX source={post.content} />
         </article>
       </main>
-    )
+    );
   } catch (error) {
-    console.error("Error in blog post page:", error)
+    console.error("Error in blog post page:", error);
     return (
       <main className="mb-32 text-gray-900 dark:text-neutral-400">
         <BackNavigation href="/blog">back</BackNavigation>
-        <h1 className="text-gray-900 dark:text-neutral-100 text-xl font-medium mb-2">Error</h1>
-        <p>There was an error loading this blog post. Please try again later.</p>
+        <h1 className="text-gray-900 dark:text-neutral-100 text-xl font-medium mb-2">
+          Error
+        </h1>
+        <p>
+          There was an error loading this blog post. Please try again later.
+        </p>
       </main>
-    )
+    );
   }
 }

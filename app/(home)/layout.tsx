@@ -1,20 +1,35 @@
-import { PropsWithChildren } from 'react';
-import { GeistMono } from 'geist/font/mono';
-import { cn } from '@/lib/utils';
-import { Metadata } from 'next';
+import { PropsWithChildren } from "react";
+import { GeistMono } from "geist/font/mono";
+import { cn } from "@/lib/utils";
+import { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: 'Aman Singh — Full-Stack Developer',
-  description: 'Aman Singh is a full-stack software developer building scalable web applications. Explore projects, experience, and blog.',
-  keywords: ['Aman Singh', 'full-stack developer', 'software engineer','backend engineer', 'Next.js', 'React', 'TypeScript', 'Node.js', 'web developer', 'portfolio', 'system design', 'India'],
+  title: "Aman Singh — Full-Stack Developer",
+  description:
+    "Aman Singh is a full-stack software developer building scalable web applications. Explore projects, experience, and blog.",
+  keywords: [
+    "Aman Singh",
+    "full-stack developer",
+    "software engineer",
+    "backend engineer",
+    "Next.js",
+    "React",
+    "TypeScript",
+    "Node.js",
+    "web developer",
+    "portfolio",
+    "system design",
+    "India",
+  ],
   openGraph: {
-    title: 'Aman Singh',
-    description: 'Aman Singh is a developer who loves to code and build things.',
-    images: ['/og-image.webp'],
-    url: 'https://www.useraman.me',
-    siteName: 'Aman Singh',
-    locale: 'en_US',
-    type: 'website',
+    title: "Aman Singh",
+    description:
+      "Aman Singh is a developer who loves to code and build things.",
+    images: ["/og-image.webp"],
+    url: "https://www.singhaman.me",
+    siteName: "Aman Singh",
+    locale: "en_US",
+    type: "website",
   },
   robots: {
     index: true,
@@ -28,29 +43,28 @@ export const metadata: Metadata = {
     },
   },
   twitter: {
-    card: 'summary_large_image',
-    title: 'Aman Singh',
-    description: 'Aman Singh is a developer who loves to code and build things.',
-    images: ['/og-image.webp'],
-    creator: '@SinghAman21_',
-    site: '@SinghAman21_',
-    siteId: '@SinghAman21_',
+    card: "summary_large_image",
+    title: "Aman Singh",
+    description:
+      "Aman Singh is a developer who loves to code and build things.",
+    images: ["/og-image.webp"],
+    creator: "@SinghAman21_",
+    site: "@SinghAman21_",
+    siteId: "@SinghAman21_",
   },
   alternates: {
-    canonical: 'https://www.useraman.me',
+    canonical: "https://www.singhaman.me",
   },
 };
-
-
-
 
 export default function HomeLayout({ children }: PropsWithChildren) {
   return (
     <main
       className={cn(
         GeistMono.className,
-        'text-sm sm:text-[13px] [text-rendering:geometricPrecision] container font-serif px-4 sm:px-6 lg:px-0'
-      )}>
+        "text-sm sm:text-[13px] [text-rendering:geometricPrecision] container font-serif px-4 sm:px-6 lg:px-0",
+      )}
+    >
       {children}
     </main>
   );
