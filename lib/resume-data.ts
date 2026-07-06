@@ -1,4 +1,4 @@
-import { Experience } from './data';
+import { Experience } from "./data";
 
 export interface WorkExperienceItem {
   company: string;
@@ -42,6 +42,28 @@ export interface EducationItem {
 // Transform Experience data for resume
 export const resumeWorkExperience: WorkExperienceItem[] = [
   {
+    company: "Artifexone",
+    title: "Software Engineer Intern",
+    location: "Remote",
+    period: "Jun 2026 - Present",
+    points: [
+      "• Built full-stack CRM workflows end-to-end using Next.js/NestJS, React Hook Form + Zod validation, and a typed API layer across the application.",
+      "• Led a hard cutover of third-party messaging and scheduling integrations to a new internal service layer, including signed webhook pipelines, idempotent background workers, and DB schema migrations.",
+      "• Found and fixed critical concurrency bugs in production, including a static idempotency key collapsing repeated edits into no-ops and a mid-session auth-redirect race across concurrent requests.",
+    ],
+  },
+  {
+    company: "Actrun",
+    title: "Backend Engineer Intern",
+    location: "Remote",
+    period: "Month Year - Month Year",
+    points: [
+      "• Built a deterministic attachment pipeline for chat/Slack, hydrating images/PDFs/text directly into LLM context.",
+      "• Set up local and staging test suites, plus a dedicated Slack bot for development/testing workflows.",
+      "• Fixed intermittent Postgres SSL drops with retry-with-backoff logic, and resolved OAuth/WebSocket issues across X, LinkedIn, and Slack integrations.",
+    ],
+  },
+  {
     company: "Vidyalankar Institute of Technology",
     title: "Cloud Security Research Intern",
     location: "Mumbai, Maharashtra",
@@ -68,7 +90,8 @@ export const resumeWorkExperience: WorkExperienceItem[] = [
 export const resumeProjects: ProjectItem[] = [
   {
     title: "SilentParcel",
-    techStack: "(Next.js, TypeScript, Tailwind CSS, Shadcn UI, Github Actions, Supabase, Appwrite)",
+    techStack:
+      "(Next.js, TypeScript, Tailwind CSS, Shadcn UI, Github Actions, Supabase, Appwrite)",
     points: [
       "• Built a end-to-end encrypted file sharing application that disappears without a trace.",
       "• Implements AES-256 end-to-end encryption for files and chats, ensuring military-grade security without registration.",
@@ -77,7 +100,8 @@ export const resumeProjects: ProjectItem[] = [
   },
   {
     title: "Graphex",
-    techStack: "(Next.js, TypeScript, Tailwind CSS, tRPC, Prisma, Github OAuth, Shadcn UI, Resend, DodoPayments)",
+    techStack:
+      "(Next.js, TypeScript, Tailwind CSS, tRPC, Prisma, Github OAuth, Shadcn UI, Resend, DodoPayments)",
     points: [
       "• Integrates with GitHub via secure OAuth, enabling seamless connection of your account using GraphQL API without sharing credentials.",
       "• Implemented an automated notification system with email and browser push notifications (Web Push API/VAPID), scheduled via cron jobs, with timezone-aware delivery management.",
@@ -86,7 +110,8 @@ export const resumeProjects: ProjectItem[] = [
   },
   {
     title: "PeakMark",
-    techStack: "(Next.js, React Query, Turbo Repo, S3, Vercel Deployment, tRPC, TypeScript)",
+    techStack:
+      "(Next.js, React Query, Turbo Repo, S3, Vercel Deployment, tRPC, TypeScript)",
     points: [
       "• Built a web application for creating and exporting SVG badges for Project Showcase and READMEs using Next.js 16, tRPC, and TypeScript. Features include a real-time preview, 6+ badge presets, and a dynamic icon picker.",
       "• Created a high-performance monorepo with Turborepo, incorporating an isolated API layer, database, and shared packages. Used tRPC for type-safe communication and optimized the build pipeline. Deployed on Vercel with analytics.",
@@ -111,7 +136,8 @@ export const technicalSkills: TechnicalSkillsData = {
   runtimes: "NodeJS, Bun, pnpm",
   ormDatabase: "Prisma, Drizzle, Mongoose, PostgreSQL, MySQL, SQLite, MongoDB",
   tools: "Docker, Git",
-  softSkills: "Leadership, Collaborativity, Adaptability, Event Management, Problem Solving, Public Speaking, Time Management",
+  softSkills:
+    "Leadership, Collaborativity, Adaptability, Event Management, Problem Solving, Public Speaking, Time Management",
 };
 
 export const volunteerExperience: VolunteerExperienceItem = {

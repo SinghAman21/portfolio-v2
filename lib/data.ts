@@ -4,23 +4,24 @@ export const projects = [
   {
     title: "PeakMark",
     year: "2026",
-    description: 
-    " A minimalist badge generator and remixer where developers can create and customize beautiful badges for their projects to grab eyes as much as possible. Built with better-t-stack and React Query.",
+    description:
+      " A minimalist badge generator and remixer where developers can create and customize beautiful badges for their projects to grab eyes as much as possible. Built with better-t-stack and React Query.",
     demoUrl: "https://peakmark.vercel.app",
     githubUrl: "https://github.com/SinghAman21/peakmark",
   },
   {
-    title:"cull",
+    title: "cull",
     year: "2026",
-    description: 
-    " A CLI tool to help you clean up your npm packages by removing unused dependencies from your file system. It analyzes your files with the regrex patterns to identify files that are not being used and removes them, helping you maintain a lean and efficient device.",
+    description:
+      " A CLI tool to help you clean up your npm packages by removing unused dependencies from your file system. It analyzes your files with the regrex patterns to identify files that are not being used and removes them, helping you maintain a lean and efficient device.",
     demoUrl: "https://www.npmjs.com/package/cull",
     githubUrl: "https://github.com/SinghAman21/cull",
   },
-    {
-    title:"FormFuzz",
+  {
+    title: "FormFuzz",
     year: "2026",
-    description: "FormFuzz is an automated google form filler that uses AI to generate realistic responses based on the form questions. Built with Google App Script, Node.js, and Gemini API, it streamlines the process of filling out lengthy forms by providing accurate and contextually relevant answers or generate a dummy data for surveys.",
+    description:
+      "FormFuzz is an automated google form filler that uses AI to generate realistic responses based on the form questions. Built with Google App Script, Node.js, and Gemini API, it streamlines the process of filling out lengthy forms by providing accurate and contextually relevant answers or generate a dummy data for surveys.",
     demoUrl: "https://formfuzz.vercel.app",
     githubUrl: "https://github.com/SinghAman21/formfuzz",
   },
@@ -45,7 +46,8 @@ export const projects = [
     year: "2025",
     description:
       "A simple yet useful vscode extension to preview SVG files in the editor. Built with VSCode API written in TypeScript. Also available on the VSCode Marketplace and Cursor Extension Marketplace.",
-    demoUrl: "https://marketplace.visualstudio.com/items?itemName=SinghAman21.svg-preview-hover",
+    demoUrl:
+      "https://marketplace.visualstudio.com/items?itemName=SinghAman21.svg-preview-hover",
     githubUrl: "https://github.com/SinghAman21/svg-preview",
   },
   {
@@ -75,7 +77,7 @@ export const projects = [
     title: "Pet Bro",
     year: "2024",
     description:
-        "PetBro is a java servlet web application to help you find a perfect pet veterinarian in your area. Built with Java SDK, Apache Tomcat and MySQL.",
+      "PetBro is a java servlet web application to help you find a perfect pet veterinarian in your area. Built with Java SDK, Apache Tomcat and MySQL.",
     githubUrl: "https://github.com/SinghAman21/petbro",
   },
   {
@@ -90,13 +92,35 @@ export const projects = [
 
 export const Experience = [
   {
+    title: "Software Engineer Intern",
+    year: "Jun 2026 - Present",
+    company: "Artifexone",
+    description: [
+      " Built full-stack CRM workflows end-to-end using Next.js/NestJS, React Hook Form + Zod validation, and a typed API layer across the application.",
+      " Led a hard cutover of third-party messaging and scheduling integrations to a new internal service layer, including signed webhook pipelines, idempotent background workers, and DB schema migrations.",
+      " Found and fixed critical concurrency bugs in production, including a static idempotency key collapsing repeated edits into no-ops and a mid-session auth-redirect race across concurrent requests.",
+    ],
+    companySite: "https://artifexone.com",
+  },
+  {
+    title: "Backend Engineer Intern",
+    year: "March 2026 - Jun 2026",
+    company: "Actrun",
+    description: [
+      " Built a deterministic attachment pipeline for chat/Slack, hydrating images/PDFs/text directly into LLM context.",
+      " Set up local and staging test suites, plus a dedicated Slack bot for development/testing workflows.",
+      " Fixed intermittent Postgres SSL drops with retry-with-backoff logic, and resolved OAuth/WebSocket issues across X, LinkedIn, and Slack integrations.",
+    ],
+    companySite: "https://actrun.ai",
+  },
+  {
     title: "Full Stack Developer Intern",
     year: "September 2025 - December 2025",
     company: "Eas Legal Partners",
     description: [
       " Developed production-grade code and a user-friendly interface to enhance user experience",
       " Designed a robust RESTful API with Express and Prisma ORM, handling complex data relationships for user authentication, document management, and organization workflows.",
-      " Deployed the application on AWS using nginx , EC2 instances, and S3 buckets for optimized performance and scalability."
+      " Deployed the application on AWS using nginx , EC2 instances, and S3 buckets for optimized performance and scalability.",
     ],
     companySite: "https://www.easlegalspartners.com",
   },
@@ -104,12 +128,12 @@ export const Experience = [
     title: "Cloud Security Research Intern",
     year: "December 2025 - February 2026",
     company: "Vidyalankar Institute of Technology",
-    description : [
-    "Reverse-engineered vulnerable AWS infra (public RDS/S3, plaintext creds); Terraform-hardened to private subnets, ALB TLS, KMS encryption, Secrets Manager—100% attack sim mitigation.",
-    "Built prod-grade Node.js+PostgreSQL AWS stack: custom IAM (prefix-specific S3/KMS), EB/RDS isolation, GuardDuty+CloudTrail logging, <5min reproducible deployments.",
-    "Simulated SQLi/priv-esc attacks; validated via tf plan, CW alarms, Config rules—achieving compliant, drift-proof infrastructure.",
+    description: [
+      "Reverse-engineered vulnerable AWS infra (public RDS/S3, plaintext creds); Terraform-hardened to private subnets, ALB TLS, KMS encryption, Secrets Manager—100% attack sim mitigation.",
+      "Built prod-grade Node.js+PostgreSQL AWS stack: custom IAM (prefix-specific S3/KMS), EB/RDS isolation, GuardDuty+CloudTrail logging, <5min reproducible deployments.",
+      "Simulated SQLi/priv-esc attacks; validated via tf plan, CW alarms, Config rules—achieving compliant, drift-proof infrastructure.",
     ],
-    companySite: "https://vit.edu.in"
+    companySite: "https://vit.edu.in",
   },
   {
     title: "OSS LEAD",
@@ -121,7 +145,7 @@ export const Experience = [
       "Worked with organizations to execute events effectively.",
     ],
     companySite:
-      "https://gdg.community.dev/gdg-on-campus-vidyalankar-institute-of-technology-mumbai-india/"      
+      "https://gdg.community.dev/gdg-on-campus-vidyalankar-institute-of-technology-mumbai-india/",
   },
   {
     title: "Freelance Developer",
@@ -132,7 +156,7 @@ export const Experience = [
       "Implemented Role-Based Access Control (RBAC) to enhance security and user management for students, teachers, and administrators.",
       "Designed a comprehensive platform allowing teachers to manage classes, students to track progress, and integrated a read-only audit log to monitor all user actions.",
     ],
-    companySite:""
+    companySite: "",
   },
   {
     title: "Developer",
@@ -143,6 +167,6 @@ export const Experience = [
       "Developed a custom e-commerce platform for a small handcrafted business, enabling seamless online sales and inventory management.",
       "Implemented media and order workflows (including custom-order image uploads, gallery handling, and admin/order modules) with Cloudinary integration and structured state/context management.",
     ],
-    companySite: "https://artyalps.vercel.app/"
-  }
+    companySite: "https://artyalps.vercel.app/",
+  },
 ];
