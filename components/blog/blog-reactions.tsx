@@ -5,7 +5,7 @@ import {
   ThumbsUp,
   Lightbulb,
   Flame,
-  Sparkles,
+  Brain,
   Bookmark,
   type LucideIcon,
 } from "lucide-react";
@@ -22,7 +22,7 @@ const ICONS: Record<ReactionType, LucideIcon> = {
   like: ThumbsUp,
   insightful: Lightbulb,
   fire: Flame,
-  mind_blown: Sparkles,
+  mind_blown: Brain,
   bookmarked: Bookmark,
 };
 
