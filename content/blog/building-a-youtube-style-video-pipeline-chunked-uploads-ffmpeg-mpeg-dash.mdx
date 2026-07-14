@@ -1,0 +1,177 @@
+---
+title: "Building a YouTube-Style Video Pipeline: Chunked Uploads, FFmpeg, and MPEG-DASH"
+publishDate: "13 July 2026"
+slug: "building-a-youtube-style-video-pipeline-chunked-uploads-ffmpeg-mpeg-dash"
+description: "How I built a local video upload-to-playback pipeline in Go: resumable chunked uploads, ffmpeg adaptive bitrate transcoding, and MPEG-DASH packaging — plus the real race conditions and bugs I hit along the way."
+tags: ["golang", "ffmpeg", "video-streaming", "system-design"]
+---
+
+## Introduction
+
+I wanted to understand how something like YouTube actually works under the hood — not by reading a system design article, but by building a scaled-down version of it myself. No auth, no cloud object storage, no CDN — just a Go API server, a separate transcode worker, Postgres, ffmpeg, and a Next.js frontend, all running locally.
+
+The goal: upload a video from the browser, watch it get chunked, transcoded into multiple qualities, packaged into an adaptive bitrate stream, and play it back with quality that switches automatically based on bandwidth — the same shape as real streaming platforms, minus the infrastructure that makes it production-grade.
+
+This post walks through the four stages of the pipeline — **chunked upload → transcoding → DASH packaging → adaptive playback** — and the specific bugs I ran into building it, because those taught me more about the design than the happy path did.
+
+## Why three processes, not one
+
+The system is deliberately split into three long-running processes that only share a Postgres database and a local `./storage` directory:
+
+- **API server** — handles HTTP requests, never touches ffmpeg.
+- **Transcode worker** — a separate binary that polls Postgres for queued jobs and shells out to ffmpeg.
+- **Frontend dev server** — Next.js, proxies API/media requests to the server.
+
+Splitting the worker out mirrors the real architecture: an API server should never block on a CPU-heavy ffmpeg encode. The "job queue" here is nothing exotic — it's just a `transcode_jobs` table polled every 2 seconds. No Kafka, no SQS. That's enough to demonstrate the pattern without pulling in infrastructure that would obscure the point.
+
+## Stage 1: Chunked, resumable upload
+
+Instead of one giant `PUT` of the whole file, the frontend slices the `File` object client-side with `File.slice()` into 5MB chunks and uploads 4 of them concurrently.
+
+The flow:
+
+1. `POST /upload-sessions` — server computes `total_chunks` from `total_size / chunk_size` and pre-creates one `UploadChunk` row per chunk, all `pending`.
+2. `PUT /upload-sessions/{id}/chunks/{n}` — each chunk is streamed straight to disk (`storage/{videoID}/chunks/{n}.part`) while computing a sha256 checksum. Retrying an already-uploaded chunk number is a no-op, so a flaky connection retrying chunk 7 twice never corrupts anything.
+3. `POST /upload-complete` — once every chunk reports uploaded, the server concatenates the `.part` files in order into `original.mp4`, deleting each chunk as it's consumed.
+
+Chunking buys you two things a single upload can't: resumability (a dropped connection only costs you the in-flight 5MB, not the whole file) and concurrency (4 chunks in flight instead of one serial stream).
+
+## Stage 2: Deciding what to transcode
+
+Once the original file is reassembled, `ffprobe` extracts its metadata — width, height, duration, codec, and crucially whether it even *has* an audio stream (more on why that matters below).
+
+The ABR ladder is a fixed table:
+
+```go
+var Ladder = []RenditionSpec{
+    {Rendition: "1080p", Height: 1080, VideoKbps: 5000, AudioKbps: 192},
+    {Rendition: "720p",  Height: 720,  VideoKbps: 2800, AudioKbps: 128},
+    {Rendition: "480p",  Height: 480,  VideoKbps: 1400, AudioKbps: 128},
+    {Rendition: "360p",  Height: 360,  VideoKbps: 800,  AudioKbps: 96},
+}
+```
+
+The rule for which rungs actually get transcoded: **include every rung whose height is ≤ the source height — never upscale.** A 4K source qualifies for all four. A 720p source only gets 720p/480p/360p jobs; there's no point manufacturing a fake 1080p file from 720p source material. If the source is smaller than even 360p, the ladder falls back to one rendition sized to the source's own height instead of upscaling anything.
+
+Each selected rendition becomes a `TranscodeJob` row with a priority — and here's a subtlety worth calling out: the lowest-quality rendition is given *higher* claim priority than the highest. That's intentional. The worker's job-claim query is `ORDER BY priority DESC`, and 360p is assigned the highest priority number. The effect: the cheapest, fastest-to-encode rendition finishes first, so the video becomes watchable (at low quality) as soon as possible instead of waiting on the slowest 1080p encode to lead.
+
+## Stage 3: Transcoding, and the race condition that bit me
+
+The worker polls `transcode_jobs` every 2 seconds. The very first version of the claim query looked like the obvious thing:
+
+```sql
+SELECT * FROM transcode_jobs WHERE status = 'queued' ORDER BY priority DESC LIMIT 1;
+-- then, in application code: UPDATE ... SET status = 'processing'
+```
+
+Two separate reads followed by a write is a textbook TOCTOU (time-of-check-to-time-of-use) race. With `WORKER_CONCURRENCY=2`, both worker goroutines would sometimes `SELECT` the same row before either had a chance to `UPDATE` it — and I caught this because I was suddenly seeing **duplicate `VideoAsset` rows** for the same rendition after a real end-to-end test.
+
+The fix was to make the claim itself atomic, inside a single transaction:
+
+```go
+err := tx.
+    Clauses(clause.Locking{Strength: "UPDATE", Options: "SKIP LOCKED"}).
+    Where("status = ?", models.TranscodeStatusQueued).
+    Order("priority DESC, created_at ASC").
+    First(&job).Error
+```
+
+`FOR UPDATE SKIP LOCKED` is the standard Postgres pattern for a poll-based job queue: it locks the row it selects, and any other transaction running the same query simply skips past rows currently locked by someone else, rather than blocking on them. Two workers polling concurrently can never walk away with the same job. This is the same trick I later reused for the packaging step (below) — any time you have "N workers racing to be the one who does X," this pattern is the answer, whether X is claiming a job or claiming a packaging step.
+
+Once a job is claimed, encoding is a single ffmpeg invocation per rendition:
+
+```bash
+ffmpeg -i original.mp4 -vf scale=-2:720 \
+  -c:v libx264 -preset veryfast -profile:v main \
+  -b:v 2800k -maxrate 2996k -bufsize 4200k \
+  -force_key_frames "expr:gte(t,n_forced*2)" -sc_threshold 0 \
+  -c:a aac -b:a 128k -ar 48000 -ac 2 \
+  -movflags +faststart \
+  720p.mp4
+```
+
+The `-force_key_frames` flag forcing a keyframe every 2 seconds isn't cosmetic — it's what makes the next stage (DASH packaging) possible without re-encoding.
+
+## Stage 4: Packaging into MPEG-DASH — and the bug that only showed up on silent videos
+
+Once every rendition for a video has reached a terminal state, the worker copy-muxes them into a single DASH manifest — no re-encoding, since the 2-second keyframe interval from encoding means every rendition's segment boundaries already line up:
+
+```bash
+ffmpeg -i 1080p.mp4 -i 720p.mp4 -i 480p.mp4 -i 360p.mp4 \
+  -map 0:v -map 1:v -map 2:v -map 3:v -map 0:a \
+  -c copy -f dash -seg_duration 4 -use_template 1 -use_timeline 1 \
+  -adaptation_sets "id=0,streams=v id=1,streams=a" \
+  -init_seg_name "init-\$RepresentationID\$.m4s" \
+  -media_seg_name "chunk-\$RepresentationID\$-\$Number%05d\$.m4s" \
+  manifest.mpd
+```
+
+That `-map 0:a` unconditionally maps an audio stream from the first input. It worked fine — until I tested with a silent screen-recording-style clip with no audio track at all, and packaging crashed:
+
+```
+Stream map '' matches no streams.
+Failed to set value '0:a' for option 'map'
+```
+
+Mapping a stream that doesn't exist is a hard ffmpeg error, not a silent no-op. The fix was to have `ffprobe` record whether the source actually has an audio stream (`HasAudio`), and make the mapping conditional:
+
+```go
+adaptationSets := "id=0,streams=v"
+if opts.HasAudio {
+    args = append(args, "-map", "0:a")
+    adaptationSets = "id=0,streams=v id=1,streams=a"
+}
+```
+
+It's a small fix, but it's a good example of a class of bug that only surfaces with a specific *kind* of input — the happy-path test videos I'd been using all had audio, so this sat latent until a silent clip found it.
+
+The output is a manifest describing every quality option plus a set of segment files:
+
+```
+AdaptationSet (video)
+ ├─ Representation id=0 → 1080p → init-0.m4s, chunk-0-*.m4s
+ ├─ Representation id=1 → 720p  → init-1.m4s, chunk-1-*.m4s
+ ├─ Representation id=2 → 480p  → init-2.m4s, chunk-2-*.m4s
+ └─ Representation id=3 → 360p  → init-3.m4s, chunk-3-*.m4s
+AdaptationSet (audio, only if HasAudio)
+ └─ Representation id=4 → audio → init-4.m4s, chunk-4-*.m4s
+```
+
+`init-N.m4s` is worth explaining on its own: an MP4 normally bundles codec configuration (the `moov` box) together with the actual media data. DASH splits those apart — the init segment (just codec config) is fetched **once** per quality tier, and the many small `chunk-N-*.m4s` files that follow are just the raw media, with no repeated header data. That split is exactly what makes a mid-playback quality switch cheap: switching from 480p to 720p means fetching `init-1.m4s` once (if it hasn't been fetched yet) and then continuing to pull `chunk-1-*.m4s` segments — not re-downloading a whole new file.
+
+One easy misreading here: `chunk-4-*.m4s` is *not* a lower-quality video tier than `chunk-3-*.m4s`. Representation ids are assigned in the order streams were mapped — all video representations first (highest to lowest quality), then audio last as its own AdaptationSet. So id 4 is the audio track, not "quality worse than 360p." If a source only qualifies for two video renditions, the audio id shifts down to match (it'd be id 2, not a fixed 4).
+
+There's a second race here structurally identical to the job-claiming one: if two worker goroutines finish the last two renditions of the same video within milliseconds of each other, both could see "all jobs done" and both try to run packaging. The fix is the same SKIP-LOCKED-flavored trick — an atomic conditional update:
+
+```go
+res := db.Model(&models.Video{}).
+    Where("id = ? AND dash_manifest_key IS NULL", id).
+    Update("dash_manifest_key", "__packaging__")
+return res.RowsAffected == 1, nil
+```
+
+Only the caller whose `UPDATE` actually matched a row (because the field was still `NULL`) proceeds to package. The sentinel value also solves a subtler polling bug: the frontend shouldn't treat "manifest key is non-nil" as "ready to play," because it's briefly `"__packaging__"` mid-packaging. The real gate is `ProcessingStatus == ready`, which gets written in the same database update as the real manifest key — so there's no window where one is true and the other isn't.
+
+## Stage 5: Adaptive playback
+
+On the frontend, [dash.js](https://github.com/Dash-Industry-Forum/dash.js) fetches `manifest.mpd`, parses the AdaptationSets and Representations, and drives playback with its own ABR controller — a throughput/buffer-based heuristic that decides when to step up or down in quality. None of this is server-driven; the backend just serves static files.
+
+You can watch it happen live: open DevTools → Network, filter by `.m4s`, and throttle the connection mid-playback. You'll see the `repID` in `chunk-{repID}-*.m4s` requests change as dash.js reacts — a clean cut at the next 4-second segment boundary, no re-buffering stall, because every rendition's segments are aligned from the forced-keyframe encoding step.
+
+One more small bug worth mentioning because it's an easy one to hit with any client-only JS library in a Next.js App Router project: dash.js's internal CMCD module throws `TypeError: Failed to construct 'URL'` if you pass it a relative manifest URL. The fix is one line — resolve it to absolute before initializing:
+
+```tsx
+const absoluteManifestUrl = new URL(manifestUrl, window.location.origin).href;
+player.initialize(videoRef.current, absoluteManifestUrl, false);
+```
+
+## What I'd call out if you're building this yourself
+
+- **Any poll-based job queue over a shared table needs `SELECT ... FOR UPDATE SKIP LOCKED`**, not a separate read-then-write. I hit this twice in the same project (job claiming, packaging claiming) — it's the same pattern both times.
+- **Test with atypical input early.** A silent video is a completely normal input for a video pipeline, and it broke packaging in a way that only showed up because I happened to test with a screen recording.
+- **A status flag that's set in two separate writes will have a window where it lies.** Gating "can this play" on a manifest key existing, instead of on the atomic status transition that writes the manifest key, meant a sentinel placeholder value could be mistaken for the real thing.
+- **Don't assume monotonically increasing IDs map to a single dimension.** `chunk-4` looking like "worse than chunk-3" is a natural but wrong reading once you know representation ids are assigned per AdaptationSet in mapping order, not per "quality tier."
+
+The whole thing runs locally with `docker-compose up`, `go run ./cmd/server`, `go run ./cmd/worker`, and `pnpm dev` — no cloud account required to see an actual adaptive bitrate stream working end to end.
+
+If you want to go deeper on any of this — why the ABR ladder never upscales, what `init-N.m4s` segments actually are, whether quality switches are visible in the Network tab, or the row-locking mechanics behind the job-queue fix — I wrote up a longer FAQ alongside the code: [FAQ.md on GitHub](https://github.com/SinghAman21/youtube-arch/blob/main/FAQ.md).
