@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { getAllPosts, getPostBySlug } from "@/lib/mdx";
 import { CustomMDX } from "@/components/mdx";
 import BackNavigation from "@/components/back-navigation";
+import BlogReactions from "@/components/blog/blog-reactions";
 
 export async function generateMetadata({
   params,
@@ -90,6 +91,8 @@ export default async function Page({
         <article className="prose prose-neutral max-w-none dark:prose-invert">
           <CustomMDX source={post.content} />
         </article>
+
+        <BlogReactions slug={slugPath} />
       </main>
     );
   } catch (error) {
