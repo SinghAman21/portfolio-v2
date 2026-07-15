@@ -6,6 +6,7 @@ import Link from "next/link";
 import { highlight } from "sugar-high";
 import remarkGfm from "remark-gfm";
 import { Pre } from "./mdx-pre";
+import { slugify } from "@/lib/toc";
 
 const options = {
   mdxOptions: {
@@ -148,16 +149,6 @@ function RoundedImage(props: any) {
       )}
     </figure>
   );
-}
-
-function slugify(str: string) {
-  return str
-    .toString()
-    .toLowerCase()
-    .trim()
-    .replace(/\s+/g, "-") // Replace spaces with -
-    .replace(/&/g, "-and-") // Replace & with and
-    .replace(/\-\-+/g, "-"); // Replace multiple - with single -
 }
 
 function createHeading(level: number) {

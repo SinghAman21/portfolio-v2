@@ -26,11 +26,14 @@ const ICONS: Record<ReactionType, LucideIcon> = {
   bookmarked: Bookmark,
 };
 
+// A click is only turned into a request once per this window per reaction.
+// Extra clicks inside the window are ignored so we don't spam the API.
+const THROTTLE_MS = 300;
+
 export default function BlogReactions({ slug }: { slug: string }) {
   const [counts, setCounts] = useState<ReactionCounts>(emptyCounts());
   const [reacted, setReacted] = useState<Set<ReactionType>>(new Set());
-  const [pending, setPending] = useState<Set<ReactionType>>(new Set());
-  const [loaded, setLoaded] = useState(false);
+  const [mounted, setMounted] = useState(false);
   // Per-reaction counter; bumping it fires that reaction's burst animation.
   const [bursts, setBursts] = useState<Record<ReactionType, number>>({
     like: 0,
@@ -39,6 +42,14 @@ export default function BlogReactions({ slug }: { slug: string }) {
     mind_blown: 0,
     bookmarked: 0,
   });
+  // Timestamp of the last captured click per reaction (leading-edge throttle).
+  const lastFired = useRef<Partial<Record<ReactionType, number>>>({});
+
+  // Reveal the rail right after mount so it eases in within 500ms, regardless
+  // of how long the counts fetch takes.
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -49,17 +60,18 @@ export default function BlogReactions({ slug }: { slug: string }) {
         setCounts(data.counts);
         setReacted(new Set<ReactionType>(data.reacted ?? []));
       })
-      .catch(() => {})
-      .finally(() => !cancelled && setLoaded(true));
+      .catch(() => {});
     return () => {
       cancelled = true;
     };
   }, [slug]);
 
   async function toggle(reaction: ReactionType) {
-    // Only block a second click on the SAME reaction; others stay interactive.
-    if (pending.has(reaction)) return;
-    setPending((prev) => new Set(prev).add(reaction));
+    // Throttle: capture at most one click per THROTTLE_MS window. The button
+    // stays fully interactive; extra clicks in the window are simply dropped.
+    const now = Date.now();
+    if (now - (lastFired.current[reaction] ?? 0) < THROTTLE_MS) return;
+    lastFired.current[reaction] = now;
 
     // Optimistic update.
     const wasActive = reacted.has(reaction);
@@ -106,12 +118,6 @@ export default function BlogReactions({ slug }: { slug: string }) {
         ...prev,
         [reaction]: Math.max(0, prev[reaction] + (wasActive ? 1 : -1)),
       }));
-    } finally {
-      setPending((prev) => {
-        const next = new Set(prev);
-        next.delete(reaction);
-        return next;
-      });
     }
   }
 
@@ -147,12 +153,11 @@ export default function BlogReactions({ slug }: { slug: string }) {
       <button
         key={type}
         onClick={() => toggle(type)}
-        disabled={pending.has(type)}
         aria-pressed={active}
         aria-label={`${label} (press ${key})`}
         title={`${label} — press ${key}`}
         className={cn(
-          "group flex w-full items-center gap-2.5 rounded-lg border px-2.5 py-2 transition-colors disabled:opacity-60",
+          "group flex w-full items-center gap-2.5 rounded-lg border px-2.5 py-2 transition-colors",
           active
             ? "border-gray-300 bg-gray-100 text-gray-900 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-100"
             : "border-gray-200 text-gray-600 hover:bg-gray-50 dark:border-neutral-800 dark:text-neutral-400 dark:hover:bg-neutral-900"
@@ -188,12 +193,11 @@ export default function BlogReactions({ slug }: { slug: string }) {
       <button
         key={type}
         onClick={() => toggle(type)}
-        disabled={pending.has(type)}
         aria-pressed={active}
         aria-label={label}
         title={label}
         className={cn(
-          "inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm transition-colors disabled:opacity-60",
+          "inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm transition-colors",
           active
             ? "border-gray-300 bg-gray-100 text-gray-900 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-100"
             : "border-gray-200 text-gray-600 hover:bg-gray-50 dark:border-neutral-800 dark:text-neutral-400 dark:hover:bg-neutral-900"
@@ -216,24 +220,21 @@ export default function BlogReactions({ slug }: { slug: string }) {
 
   return (
     <>
-      {/* Desktop: sticky labelled rail floating in the right gutter. */}
+      {/* Desktop: sticky labelled rail floating in the right gutter. Eases in
+          within 500ms of mount. */}
       <aside
         aria-label="Reactions"
         className={cn(
-          "hidden xl:flex fixed right-10 top-1/2 -translate-y-1/2 z-40 w-44 flex-col gap-1.5 transition-opacity duration-300",
-          loaded ? "opacity-100" : "opacity-0"
+          "hidden xl:flex fixed right-10 top-1/2 -translate-y-1/2 z-40 w-44 flex-col gap-1.5",
+          "transition-all duration-500 ease-out",
+          mounted ? "translate-x-0 opacity-100" : "translate-x-3 opacity-0"
         )}
       >
         {REACTIONS.map(({ type, label }, i) => row(type, label, i + 1))}
       </aside>
 
       {/* Mobile / narrow screens: inline labelled pills under the article. */}
-      <div
-        className={cn(
-          "xl:hidden mt-16 pt-8 border-t border-gray-200 dark:border-neutral-800 transition-opacity duration-300",
-          loaded ? "opacity-100" : "opacity-0"
-        )}
-      >
+      <div className="xl:hidden mt-16 pt-8 border-t border-gray-200 dark:border-neutral-800">
         <p className="text-xs text-gray-500 dark:text-neutral-500 mb-3">
           Found this useful?
         </p>

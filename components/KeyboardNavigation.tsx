@@ -50,7 +50,9 @@ export default function KeyboardNavigation() {
 
   const handleRouteNavigation = useCallback(
     (e: KeyboardEvent) => {
-      // if (!isModifierKey(e)) return null;
+      // Single-letter shortcuts are bare keypresses; let modified combos
+      // (Ctrl/Cmd+R refresh, Cmd+P print, Alt+…) fall through to the browser.
+      if (e.ctrlKey || e.metaKey || e.altKey) return false;
 
       const key = e.key.toLowerCase();
       const route = routes.find((r) => r.key.toLowerCase() === key);

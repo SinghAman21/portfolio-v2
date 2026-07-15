@@ -1,8 +1,11 @@
 import { notFound } from "next/navigation";
-import { getAllPosts, getPostBySlug } from "@/lib/mdx";
+import { getAllPosts, getPostBySlug, getAdjacentPosts } from "@/lib/mdx";
+import { extractToc } from "@/lib/toc";
 import { CustomMDX } from "@/components/mdx";
 import BackNavigation from "@/components/back-navigation";
 import BlogReactions from "@/components/blog/blog-reactions";
+import BlogToc from "@/components/blog/blog-toc";
+import BlogPostNav from "@/components/blog/blog-post-nav";
 
 export async function generateMetadata({
   params,
@@ -74,8 +77,13 @@ export default async function BlogPost({
       notFound();
     }
 
+    const toc = extractToc(post.content);
+    const { prev, next } = await getAdjacentPosts(slug);
+
     return (
       <main className="mb-32 text-gray-900 dark:text-neutral-400">
+        <BlogToc items={toc} title={post.title} />
+
         <div className="animate-[slideFadeUp_0.4s_ease-out]">
           <BackNavigation href="/blog">back</BackNavigation>
         </div>
@@ -94,6 +102,8 @@ export default async function BlogPost({
         </article>
 
         <BlogReactions slug={slug} />
+
+        <BlogPostNav prev={prev} next={next} />
       </main>
     );
   } catch (error) {

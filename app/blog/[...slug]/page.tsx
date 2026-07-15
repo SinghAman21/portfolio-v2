@@ -1,8 +1,11 @@
 import { notFound } from "next/navigation";
-import { getAllPosts, getPostBySlug } from "@/lib/mdx";
+import { getAllPosts, getPostBySlug, getAdjacentPosts } from "@/lib/mdx";
+import { extractToc } from "@/lib/toc";
 import { CustomMDX } from "@/components/mdx";
 import BackNavigation from "@/components/back-navigation";
 import BlogReactions from "@/components/blog/blog-reactions";
+import BlogToc from "@/components/blog/blog-toc";
+import BlogPostNav from "@/components/blog/blog-post-nav";
 
 export async function generateMetadata({
   params,
@@ -75,8 +78,13 @@ export default async function Page({
       notFound();
     }
 
+    const toc = extractToc(post.content);
+    const { prev, next } = await getAdjacentPosts(slugPath);
+
     return (
       <main className="mb-32 text-gray-900 dark:text-neutral-400">
+        <BlogToc items={toc} title={post.title} />
+
         <BackNavigation href="/blog">back</BackNavigation>
 
         <header className="mt-6 mb-8">
@@ -93,6 +101,8 @@ export default async function Page({
         </article>
 
         <BlogReactions slug={slugPath} />
+
+        <BlogPostNav prev={prev} next={next} />
       </main>
     );
   } catch (error) {

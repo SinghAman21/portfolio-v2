@@ -52,7 +52,27 @@ export async function getAllPosts(): Promise<Post[]> {
     })
   )
 
-  return allPostsData.sort((a, b) => (a.date < b.date ? 1 : -1))
+  // Sort by real date (latest first). The `date` values are human strings like
+  // "21 Oct 2025" / "13 July 2026", so parse them instead of comparing as text.
+  return allPostsData.sort(
+    (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+  )
+}
+
+// getAllPosts() is sorted newest -> oldest. "prev" is the older post you'd read
+// next going back in time; "next" is the newer one.
+export async function getAdjacentPosts(
+  slug: string,
+): Promise<{ prev: Post | null; next: Post | null }> {
+  const posts = await getAllPosts();
+  const index = posts.findIndex((post) => post.slug === slug);
+
+  if (index === -1) return { prev: null, next: null };
+
+  return {
+    next: index > 0 ? posts[index - 1] : null,
+    prev: index < posts.length - 1 ? posts[index + 1] : null,
+  };
 }
 
 export async function getPostBySlug(slug: string): Promise<Post | null> {
