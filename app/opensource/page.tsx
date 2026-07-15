@@ -1,7 +1,10 @@
 "use client";
 
 import PageHeader from "@/components/PageHeader";
-import { OpenSourcePRs, Acknowledgments } from "@/lib/data";
+// import { OpenSourcePRs, Acknowledgments } from "@/lib/data";
+import type { OpenSourcePR, Acknowledgment } from "@/lib/types";
+const OpenSourcePRs: OpenSourcePR[] = [];
+const Acknowledgments: Acknowledgment[] = [];
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { GitPullRequest, ExternalLink, Award, Star, Newspaper, Trophy, Package } from "lucide-react";
