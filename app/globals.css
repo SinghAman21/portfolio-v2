@@ -1,6 +1,21 @@
 @import 'tailwindcss';
 
 
+html {
+  scroll-behavior: smooth;
+}
+
+/* Anchored headings (targeted from the blog TOC) should stop below the fixed
+   top padding instead of hiding under it. Matches the layout's pt-24 (6rem). */
+:is(h1, h2, h3, h4, h5, h6)[id] {
+  scroll-margin-top: 6rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}
 
 
 @theme {
