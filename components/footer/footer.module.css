@@ -9,7 +9,8 @@
   min-height: var(--footer-text-size);
 }
 
-@media (prefers-color-scheme: dark) {
+/* dark-only: always applied */
+@media all {
   .footer {
     color: rgb(163, 163, 163);
   }
@@ -39,7 +40,8 @@
   flex: none;
 }
 
-@media (prefers-color-scheme: dark) {
+/* dark-only: always applied */
+@media all {
   .footer-grid {
     background-image: radial-gradient(transparent 1px, rgb(0, 0, 0) 1px);
   }
@@ -54,7 +56,8 @@
       rgba(255, 255, 255, 0.8) 100%);
 }
 
-@media (prefers-color-scheme: dark) {
+/* dark-only: always applied */
+@media all {
   .footer-gradient {
     background-image: linear-gradient(rgba(0, 0, 0, 0) 0% 50%,
         rgba(0, 0, 0, 0.6) 100%);
