@@ -17,7 +17,7 @@ const instrumentSerif = Instrument_Serif({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://www.singhaman.me/"),
+  metadataBase: new URL("https://singhaman.me/"),
   title: {
     template: "%s | Aman Singh",
     default: "Aman Singh",
@@ -47,7 +47,7 @@ export const metadata: Metadata = {
     title: "Aman Singh — Full-Stack Web Developer & Software Engineer",
     description:
       "Aman Singh is a full-stack software developer specializing in Next.js, React, TypeScript, and Node.js. Explore projects, experience, and technical writing.",
-    url: "https://www.singhaman.me/",
+    url: "https://singhaman.me/",
     siteName: "Aman Singh's Portfolio",
     images: [
       {
@@ -163,8 +163,8 @@ export default function RootLayout({
               "@context": "https://schema.org",
               "@type": "Person",
               name: "Aman Singh",
-              url: "https://www.singhaman.me",
-              image: "https://www.singhaman.me/og-image.webp",
+              url: "https://singhaman.me",
+              image: "https://singhaman.me/og-image.webp",
               sameAs: [
                 "https://x.com/SinghAman21_",
                 "https://github.com/SinghAman21",
@@ -175,7 +175,7 @@ export default function RootLayout({
               worksFor: {
                 "@type": "Freelance",
                 name: "Aman Singh",
-                url: "https://www.singhaman.me",
+                url: "https://singhaman.me",
               },
               knowsAbout: [
                 "Next.js",

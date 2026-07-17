@@ -11,7 +11,7 @@ export const metadata: Metadata = {
     title: "Projects — Web Apps & Open Source by Aman Singh",
     description:
       "Explore web applications and open-source projects built by Aman Singh using Next.js, React, TypeScript, Go, and Node.js. From AI tools to real-time apps.",
-    url: "https://www.singhaman.me/projects",
+    url: "https://singhaman.me/projects",
     images: ["/og-image.webp"],
     siteName: "Aman Singh",
     locale: "en_US",
@@ -36,7 +36,7 @@ export const metadata: Metadata = {
     },
   },
   alternates: {
-    canonical: "https://www.singhaman.me/projects",
+    canonical: "https://singhaman.me/projects",
   },
 };
 

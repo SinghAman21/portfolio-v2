@@ -26,7 +26,7 @@ export const metadata: Metadata = {
     description:
       "Aman Singh is a developer who loves to code and build things.",
     images: ["/og-image.webp"],
-    url: "https://www.singhaman.me",
+    url: "https://singhaman.me",
     siteName: "Aman Singh",
     locale: "en_US",
     type: "website",
@@ -53,7 +53,7 @@ export const metadata: Metadata = {
     siteId: "@SinghAman21_",
   },
   alternates: {
-    canonical: "https://www.singhaman.me",
+    canonical: "https://singhaman.me",
   },
 };
 
