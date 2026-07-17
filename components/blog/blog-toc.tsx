@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { PreviewRail, type PreviewRailItem } from "@/components/motion/preview-rail";
 import { cn } from "@/lib/utils";
 import type { TocItem } from "@/lib/toc";
 
@@ -12,7 +13,16 @@ export default function BlogToc({
   title: string;
 }) {
   const [activeId, setActiveId] = useState<string | null>(null);
-  const activeRef = useRef<HTMLLIElement | null>(null);
+
+  const railItems = useMemo<PreviewRailItem[]>(
+    () =>
+      items.map((item) => ({
+        id: item.id,
+        label: item.text,
+        href: `#${item.id}`,
+      })),
+    [items],
+  );
 
   useEffect(() => {
     if (!items.length) return;
@@ -23,81 +33,77 @@ export default function BlogToc({
 
     if (!headings.length) return;
 
-    // Track which headings are currently on screen; the topmost one wins.
-    const visible = new Map<string, number>();
-    const observer = new IntersectionObserver(
-      (entries) => {
-        for (const entry of entries) {
-          if (entry.isIntersecting) {
-            visible.set(entry.target.id, entry.boundingClientRect.top);
-          } else {
-            visible.delete(entry.target.id);
-          }
-        }
+    // The active heading is the last one whose top has scrolled past a fixed
+    // line below the header. Recomputed on scroll so it always tracks position.
+    const OFFSET = 120;
+    let frame = 0;
 
-        if (visible.size > 0) {
-          const [topId] = [...visible.entries()].sort((a, b) => a[1] - b[1])[0];
-          setActiveId(topId);
-        }
-      },
-      { rootMargin: "-80px 0px -70% 0px", threshold: 0 },
-    );
+    const update = () => {
+      frame = 0;
+      let current = headings[0].id;
 
-    headings.forEach((el) => observer.observe(el));
-    return () => observer.disconnect();
+      for (const el of headings) {
+        if (el.getBoundingClientRect().top - OFFSET <= 0) current = el.id;
+        else break;
+      }
+
+      // Near the very bottom, force the last heading active so the final
+      // section can be reached even if its top never crosses the line.
+      const atBottom =
+        window.innerHeight + window.scrollY >=
+        document.documentElement.scrollHeight - 2;
+      if (atBottom) current = headings[headings.length - 1].id;
+
+      setActiveId(current);
+    };
+
+    const onScroll = () => {
+      if (frame) return;
+      frame = requestAnimationFrame(update);
+    };
+
+    update();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll);
+    return () => {
+      if (frame) cancelAnimationFrame(frame);
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
+    };
   }, [items]);
 
-  // Keep the active row scrolled into view within the (scrollable) TOC card.
-  useEffect(() => {
-    activeRef.current?.scrollIntoView({ block: "nearest" });
-  }, [activeId]);
-
   if (!items.length) return null;
-
-  const minLevel = Math.min(...items.map((i) => i.level));
 
   return (
     <aside
       aria-label="Table of contents"
-      className="hidden xl:block fixed left-4 2xl:left-16 top-1/2 -translate-y-1/2 z-40 w-56"
+      className="hidden xl:block fixed left-4 2xl:left-16 top-1/2 -translate-y-1/2 z-40 w-80"
     >
-      <nav
-        className={cn(
-          "max-h-[70vh] overflow-y-auto rounded-2xl border p-5",
-          "border-gray-200 bg-white/80 backdrop-blur",
-          "dark:border-neutral-800 dark:bg-neutral-900/70",
-          "[scrollbar-width:none] [&::-webkit-scrollbar]:hidden",
+      <PreviewRail
+        items={railItems}
+        orientation="vertical"
+        activeId={activeId ?? undefined}
+        onActiveChange={setActiveId}
+        className="min-h-0"
+        renderPreview={(item) => (
+          <div
+            className={cn(
+              "rounded-2xl border p-4 shadow-sm",
+              "border-gray-200 bg-white/80 backdrop-blur",
+              "dark:border-neutral-800 dark:bg-neutral-900/70",
+            )}
+          >
+            {item.id === railItems[0]?.id ? (
+              <p className="mb-1 text-[11px] uppercase tracking-wide text-blue-600 dark:text-blue-400">
+                {title}
+              </p>
+            ) : null}
+            <p className="text-[13px] leading-snug text-gray-900 dark:text-neutral-100">
+              {item.label}
+            </p>
+          </div>
         )}
-      >
-        <p className="mb-3 text-sm font-medium leading-snug text-blue-600 dark:text-blue-400">
-          {title}
-        </p>
-
-        <ul className="space-y-2 text-[13px]">
-          {items.map((item) => {
-            const active = item.id === activeId;
-            return (
-              <li
-                key={item.id}
-                ref={active ? activeRef : null}
-                style={{ paddingLeft: `${(item.level - minLevel) * 14}px` }}
-              >
-                <a
-                  href={`#${item.id}`}
-                  className={cn(
-                    "block leading-snug transition-colors",
-                    active
-                      ? "text-gray-900 dark:text-neutral-100"
-                      : "text-gray-500 hover:text-gray-800 dark:text-neutral-500 dark:hover:text-neutral-300",
-                  )}
-                >
-                  {item.text}
-                </a>
-              </li>
-            );
-          })}
-        </ul>
-      </nav>
+      />
     </aside>
   );
 }

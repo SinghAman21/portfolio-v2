@@ -2,11 +2,13 @@ import type { Metadata } from "next";
 import "./globals.css";
 import Footer from "@/components/footer/footer";
 import KeyboardNavigation from "@/components/KeyboardNavigation";
-import { Instrument_Serif } from "next/font/google";
+import { Instrument_Serif, Geist } from "next/font/google";
 import { GeistMono } from "geist/font/mono";
 import { cn } from "@/lib/utils";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { Analytics } from "@vercel/analytics/next";
+
+const geist = Geist({subsets:['latin'],variable:'--font-sans'});
 
 const instrumentSerif = Instrument_Serif({
   subsets: ["latin"],
@@ -147,7 +149,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={instrumentSerif.variable}>
+    <html lang="en" className={cn("font-sans", geist.variable)}>
       <head>
         <meta name="apple-mobile-web-app-title" content="Aman" />
         <script

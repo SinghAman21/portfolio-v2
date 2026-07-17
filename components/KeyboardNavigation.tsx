@@ -151,6 +151,7 @@ export default function KeyboardNavigation() {
         data-keyboard-nav-dialog
         className={cn(
           'w-full max-w-md mx-4 bg-white dark:bg-neutral-900',
+          'font-mono text-sm',
           'border border-gray-200 dark:border-neutral-800',
           'rounded-lg shadow-xl',
           'animate-[slideFadeUp_0.2s_ease-out]'
