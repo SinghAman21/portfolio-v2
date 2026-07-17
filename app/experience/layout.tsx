@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils";
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Experience — Professional Work History of Aman Singh",
+  title: { absolute: "Experience — Professional Work History of Aman Singh" },
   description:
     "Professional experience of Aman Singh as a software engineer at EaslegalPartners and many early startups more. Full-stack development roles and achievements.",
   openGraph: {

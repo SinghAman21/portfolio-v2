@@ -3,7 +3,7 @@ import { GeistMono } from "geist/font/mono";
 import { cn } from "@/lib/utils";
 
 export const metadata = {
-  title: "Resume — Aman Singh, Full-Stack Software Developer",
+  title: { absolute: "Resume — Aman Singh, Full-Stack Software Developer" },
   description:
     "Download or view the professional resume of Aman Singh. Skills in Next.js, React, TypeScript, Node.js, and full-stack web development. Based in India.",
   openGraph: {

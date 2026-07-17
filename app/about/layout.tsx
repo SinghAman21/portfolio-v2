@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils";
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "About — Aman Singh",
+  title: { absolute: "About — Aman Singh" },
   description:
     "Learn about Aman Singh's journey as a full-stack developer, from starting with Python and Java to building scalable web applications with Next.js, React, and Node.js.",
   openGraph: {
