@@ -17,7 +17,7 @@ export async function GET() {
 
 ## Blog
 
-${allPosts.map((item) => `- [${item.title}](${baseUrl}/blog/${item.slug}.mdx): ${item.excerpt}`).join("\n")}
+${allPosts.map((item) => `- [${item.title}](${baseUrl}/blog.mdx/${item.slug}): ${item.excerpt}`).join("\n")}
 `;
 
   return new Response(content, {

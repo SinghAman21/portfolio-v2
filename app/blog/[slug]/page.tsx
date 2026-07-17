@@ -80,8 +80,37 @@ export default async function BlogPost({
     const toc = extractToc(post.content);
     const { prev, next } = await getAdjacentPosts(slug);
 
+    const parsedDate = new Date(post.date);
+    const isoDate = isNaN(parsedDate.getTime())
+      ? undefined
+      : parsedDate.toISOString();
+    const jsonLd = {
+      "@context": "https://schema.org",
+      "@type": "BlogPosting",
+      headline: post.title,
+      description: post.excerpt,
+      url: `https://singhaman.me/blog/${slug}`,
+      mainEntityOfPage: `https://singhaman.me/blog/${slug}`,
+      image: "https://singhaman.me/og-image.webp",
+      ...(isoDate ? { datePublished: isoDate, dateModified: isoDate } : {}),
+      author: {
+        "@type": "Person",
+        name: "Aman Singh",
+        url: "https://singhaman.me",
+      },
+      publisher: {
+        "@type": "Person",
+        name: "Aman Singh",
+        url: "https://singhaman.me",
+      },
+    };
+
     return (
       <main className="mb-32 text-gray-900 dark:text-neutral-400">
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
         <BlogToc items={toc} title={post.title} />
 
         <div className="animate-[slideFadeUp_0.4s_ease-out]">
