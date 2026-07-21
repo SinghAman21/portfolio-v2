@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils";
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Aman Singh — Full-Stack Developer",
+  title: { absolute: "Aman Singh — Full-Stack Developer" },
   description:
     "Aman Singh is a full-stack software developer building scalable web applications. Explore projects, experience, and blog.",
   keywords: [
@@ -22,11 +22,11 @@ export const metadata: Metadata = {
     "India",
   ],
   openGraph: {
-    title: "Aman Singh",
+    title: "Aman Singh — Full-Stack Developer",
     description:
-      "Aman Singh is a developer who loves to code and build things.",
+      "Aman Singh is a full-stack software developer building scalable web applications. Explore projects, experience, and blog.",
     images: ["/og-image.webp"],
-    url: "https://www.singhaman.me",
+    url: "https://singhaman.me",
     siteName: "Aman Singh",
     locale: "en_US",
     type: "website",
@@ -44,16 +44,16 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Aman Singh",
+    title: "Aman Singh — Full-Stack Developer",
     description:
-      "Aman Singh is a developer who loves to code and build things.",
+      "Aman Singh is a full-stack software developer building scalable web applications. Explore projects, experience, and blog.",
     images: ["/og-image.webp"],
     creator: "@SinghAman21_",
     site: "@SinghAman21_",
     siteId: "@SinghAman21_",
   },
   alternates: {
-    canonical: "https://www.singhaman.me",
+    canonical: "https://singhaman.me",
   },
 };
 

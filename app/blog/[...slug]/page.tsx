@@ -29,7 +29,7 @@ export async function generateMetadata({
       openGraph: {
         title: `${post.title} | Aman Singh`,
         description: post.excerpt,
-        url: `https://www.singhaman.me/blog/${slugPath}`,
+        url: `https://singhaman.me/blog/${slugPath}`,
         images: ["/og-image.webp"],
         siteName: "Aman Singh",
         locale: "en_US",

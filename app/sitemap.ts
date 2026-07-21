@@ -2,7 +2,7 @@ import { getAllPosts } from "@/lib/mdx";
 import type { MetadataRoute } from "next";
 
 // Use the deployed site origin so sitemap URLs match the host serving the file
-export const baseUrl = "https://www.singhaman.me";
+export const baseUrl = "https://singhaman.me";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const posts = await getAllPosts();

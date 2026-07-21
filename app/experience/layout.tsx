@@ -4,14 +4,14 @@ import { cn } from "@/lib/utils";
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Experience — Professional Work History of Aman Singh",
+  title: { absolute: "Experience — Professional Work History of Aman Singh" },
   description:
     "Professional experience of Aman Singh as a software engineer at EaslegalPartners and many early startups more. Full-stack development roles and achievements.",
   openGraph: {
     title: "Experience — Professional Work History of Aman Singh",
     description:
       "Professional experience of Aman Singh as a software engineer at EaslegalPartners and many early startups more. Full-stack development roles and achievements.",
-    url: "https://www.singhaman.me/experience",
+    url: "https://singhaman.me/experience",
     images: ["/og-image.webp"],
     siteName: "Aman Singh",
     locale: "en_US",
@@ -36,7 +36,7 @@ export const metadata: Metadata = {
     },
   },
   alternates: {
-    canonical: "https://www.singhaman.me/experience",
+    canonical: "https://singhaman.me/experience",
   },
 };
 export default function HomeLayout({ children }: PropsWithChildren) {

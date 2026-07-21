@@ -4,14 +4,14 @@ import { cn } from "@/lib/utils";
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "About — Aman Singh",
+  title: { absolute: "About — Aman Singh" },
   description:
     "Learn about Aman Singh's journey as a full-stack developer, from starting with Python and Java to building scalable web applications with Next.js, React, and Node.js.",
   openGraph: {
     title: "About — Aman Singh",
     description:
       "Learn about Aman Singh's journey as a full-stack developer, from starting with Python and Java to building scalable web applications with Next.js, React, and Node.js.",
-    url: "https://www.singhaman.me/about",
+    url: "https://singhaman.me/about",
     images: ["/og-image.webp"],
     siteName: "Aman Singh",
     locale: "en_US",
@@ -36,7 +36,7 @@ export const metadata: Metadata = {
     },
   },
   alternates: {
-    canonical: "https://www.singhaman.me/about",
+    canonical: "https://singhaman.me/about",
   },
 };
 
