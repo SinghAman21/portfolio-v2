@@ -63,7 +63,7 @@ export async function generateStaticParams() {
   }
 }
 
-export default async function Page({
+export default async function BlogPost({
   params,
 }: {
   params: Promise<{ slug: string[] }>;
@@ -81,22 +81,53 @@ export default async function Page({
     const toc = extractToc(post.content);
     const { prev, next } = await getAdjacentPosts(slugPath);
 
+    const parsedDate = new Date(post.date);
+    const isoDate = isNaN(parsedDate.getTime())
+      ? undefined
+      : parsedDate.toISOString();
+    const jsonLd = {
+      "@context": "https://schema.org",
+      "@type": "BlogPosting",
+      headline: post.title,
+      description: post.excerpt,
+      url: `https://singhaman.me/blog/${slugPath}`,
+      mainEntityOfPage: `https://singhaman.me/blog/${slugPath}`,
+      image: "https://singhaman.me/og-image.webp",
+      ...(isoDate ? { datePublished: isoDate, dateModified: isoDate } : {}),
+      author: {
+        "@type": "Person",
+        name: "Aman Singh",
+        url: "https://singhaman.me",
+      },
+      publisher: {
+        "@type": "Person",
+        name: "Aman Singh",
+        url: "https://singhaman.me",
+      },
+    };
+
     return (
       <main className="mb-32 text-gray-900 dark:text-neutral-400">
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
         <BlogToc items={toc} title={post.title} />
 
-        <BackNavigation href="/blog">back</BackNavigation>
+        <div className="animate-[slideFadeUp_0.4s_ease-out]">
+          <BackNavigation href="/blog">back</BackNavigation>
+        </div>
 
-        <header className="mt-6 mb-8">
-          <h1 className="text-gray-900 dark:text-neutral-100 text-xl font-medium mb-2">
+        <header className="mt-6 mb-8 animate-[slideFadeUp_0.5s_ease-out]">
+          <h1 className="text-gray-900 dark:text-neutral-100 text-xl font-serif font-medium mb-2 leading-tight">
             {post.title}
           </h1>
-          <p className="text-gray-500 dark:text-neutral-500 text-sm">
+          <p className="text-gray-500 dark:text-neutral-500 text-sm mt-2">
             {post.date}
           </p>
         </header>
 
-        <article className="prose prose-neutral max-w-none dark:prose-invert">
+        <article className="prose prose-neutral max-w-none dark:prose-invert blog-content">
           <CustomMDX source={post.content} />
         </article>
 

@@ -7,17 +7,17 @@ export async function generateStaticParams() {
   const posts = await getAllPosts();
 
   return posts.map((post) => ({
-    slug: post.slug,
+    slug: post.slug.split("/"),
   }));
 }
 
 export async function GET(
   _request: Request,
-  { params }: { params: Promise<{ slug: string }> }
+  { params }: { params: Promise<{ slug: string[] }> }
 ) {
   const { slug } = await params;
 
-  const post = await getPostBySlug(slug);
+  const post = await getPostBySlug(slug.join("/"));
 
   if (!post) {
     notFound();
