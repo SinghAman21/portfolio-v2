@@ -7,6 +7,7 @@ import { highlight } from "sugar-high";
 import remarkGfm from "remark-gfm";
 import { Pre } from "./mdx-pre";
 import { slugify } from "@/lib/toc";
+import { Term } from "./mdx-term";
 
 const options = {
   mdxOptions: {
@@ -289,6 +290,7 @@ const components = {
   tr: TableRow,
   th: TableHeader,
   td: TableCell,
+  Term,
 };
 
 export function CustomMDX(props: any) {

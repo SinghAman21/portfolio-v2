@@ -38,9 +38,11 @@ export async function getAllPosts(): Promise<Post[]> {
       const fileContents = fs.readFileSync(fullPath, "utf8")
       const matterResult = matter(fileContents)
 
-      // Generate slug based on relative path from postsDirectory
+      // Prefer the explicit `slug` from frontmatter; fall back to the file's
+      // path relative to postsDirectory when it isn't set.
       const relativePath = path.relative(postsDirectory, fullPath)
-      const slug = relativePath.replace(/\.mdx$/, "").replace(/\\/g, "/")
+      const pathSlug = relativePath.replace(/\.mdx$/, "").replace(/\\/g, "/")
+      const slug = matterResult.data.slug || pathSlug
 
       return {
         slug,
@@ -79,8 +81,11 @@ export async function getPostBySlug(slug: string): Promise<Post | null> {
   try {
     const filePaths = getAllMarkdownFiles(postsDirectory)
     const targetPath = filePaths.find((fullPath) => {
+      const fileContents = fs.readFileSync(fullPath, "utf8")
+      const matterResult = matter(fileContents)
       const relativePath = path.relative(postsDirectory, fullPath)
-      const currentSlug = relativePath.replace(/\.mdx$/, "").replace(/\\/g, "/")
+      const pathSlug = relativePath.replace(/\.mdx$/, "").replace(/\\/g, "/")
+      const currentSlug = matterResult.data.slug || pathSlug
       return currentSlug === slug
     })
 

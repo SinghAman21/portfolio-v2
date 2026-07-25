@@ -34,7 +34,10 @@ export function extractToc(content: string): TocItem[] {
     if (!match) continue;
 
     const level = match[1].length;
-    const text = match[2].trim();
+    const text = match[2]
+      .trim()
+      .replace(/<Term[^>]*>(.*?)<\/Term>/g, "$1")
+      .replace(/<[^>]+>/g, "");
     items.push({ level, text, id: slugify(text) });
   }
 

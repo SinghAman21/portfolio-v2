@@ -1,0 +1,130 @@
+---
+title: "SEO, AEO, and Modern Reach: How People Actually Find You in 2026"
+publishDate: "22 July 2026"
+slug: "seo-aeo-and-modern-reach"
+description: "A complete map of modern discoverability — classic SEO, answer-engine optimization for AI search, distribution techniques, and social media traffic — with a free path and a paid path for every single piece."
+tags: ["seo", "aeo", "geo", "marketing", "social-media", "traffic", "growth"]
+---
+
+Traffic used to be one game: rank on Google, win. It's now at least three games running at once — classic search, AI answer engines, and social feeds — and they reward different behavior. Most advice covers one game and pretends the others don't exist, or quietly assumes you have a budget.
+
+This post is the full map. For every technique I'll explain the *why* first — what mechanism you're actually exploiting — then give you a free way and a paid way to do it. The honest pattern you'll notice: **paid almost never buys results directly; it buys speed and data.** There is nearly always a manual path, because every paid tool is ultimately automating something a person can do slowly. Where something genuinely can't be done free, I'll say so plainly.
+
+## The mental model: three discovery engines, one asset
+
+Before tactics, understand what changed.
+
+**Search engines rank documents.** Google's core loop is unchanged in twenty years: crawl pages, judge relevance and authority, rank them for queries. You win by being the most credible answer to a query people actually type.
+
+**Answer engines cite sources.** ChatGPT with browsing, Perplexity, Google's AI Overviews, Bing Copilot — these don't send you a ranked list; they *synthesize an answer* and cite a handful of sources. Being cited is the new ranking. This is called <Term term="Answer Engine Optimization">AEO</Term> or <Term term="Generative Engine Optimization">GEO</Term> — same idea, two names. The critical difference from <Term term="Search Engine Optimization">SEO</Term>: answer engines pull *passages*, not pages. A single well-structured paragraph can earn a citation even if the page as a whole would never rank #1.
+
+**Social feeds rank engagement.** No feed algorithm cares about your site. It cares whether your *post* keeps people on the platform. Social traffic is therefore a two-step conversion: win the feed first, then convert attention into clicks. Anyone who links out in step one loses step one.
+
+The good news: all three engines feed on the same underlying asset — genuinely useful content with a real person behind it. The techniques below are about packaging that asset for each engine, not creating three different things.
+
+## Part 1: SEO — still the compounding engine
+
+Search is no longer the whole game, but it's still the only channel where a page you wrote two years ago can bring you a thousand visitors this month for zero ongoing effort. Everything else on this list decays in days; search compounds.
+
+### Technical foundation
+
+The reasoning: Google can't rank what it can't crawl, and it deprioritizes what's slow or broken. Technical SEO doesn't win you anything — it stops you from losing by default. It's a gate, not a lever.
+
+The checklist that covers 95% of real sites: one canonical URL per page (pick www or non-www and redirect the other), an XML sitemap that lists everything you want indexed and nothing you don't, `robots.txt` that isn't accidentally blocking assets, HTTPS everywhere, mobile rendering that works, and Core Web Vitals in the green — <Term term="Largest Contentful Paint">LCP</Term> under 2.5s, <Term term="Interaction to Next Paint">INP</Term> under 200ms, <Term term="Cumulative Layout Shift">CLS</Term> under 0.1.
+
+**Free:** Google Search Console is the single most valuable SEO tool in existence and costs nothing. It shows you the queries you already rank for, indexing failures, and Core Web Vitals from real Chrome users. Pair it with Lighthouse (built into Chrome DevTools) and Bing Webmaster Tools (five minutes to set up, and — this matters now — Bing's index feeds Microsoft Copilot's citations). If you do exactly one thing after reading this post, verify Search Console.
+
+**Paid:** Crawlers like Screaming Frog (\~£259/yr; free up to 500 URLs), Sitebulb, or the site-audit modules of Ahrefs/Semrush automate finding broken links, redirect chains, and orphan pages. On a small site you can find all of that manually by clicking around with DevTools open — the paid tools just make it a ten-minute job instead of an afternoon.
+
+### Keyword research: finding demand before you write
+
+The reasoning: content fails most often not because it's bad but because it answers a question nobody asks, or asks in a phrasing nobody uses. Keyword research is demand measurement — you're checking that the door you're about to build leads somewhere.
+
+The strategy that works for small sites: ignore head terms ("seo tips" — you will never outrank twenty-year-old domains) and target long-tail queries with clear intent ("how to add json-ld to next js app router"). Low volume, low competition, high conversion. Twenty long-tail posts beat one head-term post you'll never rank for.
+
+**Free:** Google's own interfaces leak demand data everywhere: Autocomplete (type your topic, read the suggestions), the "People Also Ask" boxes, related searches at the bottom of the <Term term="Search Engine Results Page">SERP</Term>. Google Trends shows direction. AnswerThePublic and AlsoAsked have limited free tiers that visualize question-phrasings. And Search Console's Queries report shows keywords where you're on page two — those are your cheapest wins, because Google already half-trusts you for them; improving an existing page beats writing a new one.
+
+**Paid:** Ahrefs, Semrush, or the cheaper Keywords Everywhere (\~$27/yr, pay-as-you-go credits) give you search volume and difficulty scores. What you're really buying is *prioritization confidence* — the ability to compare twenty ideas by volume before committing writing time. The manual alternative genuinely exists: pick queries where the current page-one results are thin, outdated, or forum threads. If Reddit ranks for a query, that query is winnable.
+
+### Content that ranks: intent, depth, and <Term term="Experience, Expertise, Authoritativeness, Trust">E-E-A-T</Term>
+
+The reasoning: Google's quality guidelines revolve around <Term term="Experience, Expertise, Authoritativeness, Trust">E-E-A-T</Term> — Experience, Expertise, Authoritativeness, Trust. The signal it's hunting for is "was this written by someone who actually did the thing?" — because that's precisely what AI-generated filler can't fake. First-person specifics ("this took down my staging cluster for an hour"), real numbers, real screenshots, and named authors with bios are ranking assets now, not decoration.
+
+Match the *intent shape* too: if every page-one result for your query is a listicle, Google has learned searchers want a listicle — a beautiful essay will not rank there. Read the SERP before writing; it's the answer key.
+
+**Free:** Your experience is the moat, and it costs nothing. Write from real work, show the failure modes, publish an author page. Update old posts — freshness on an already-indexed URL is one of the highest-leverage free actions in SEO.
+
+**Paid:** Content-optimization tools (Surfer, Clearscope, Frase — roughly $80–$180/mo) compare your draft against the current top ten and suggest topical gaps. Useful for competitive commercial keywords; overkill for a technical blog. The manual version is reading the top five results yourself and listing what they cover that you don't — which is honestly most of what the tools do.
+
+### Backlinks: the part everyone hates
+
+The reasoning: links remain Google's strongest authority signal because they're a vote that costs the voter something — page space and their own reputation. That's also why buying them is against Google's rules and why link *earning* can't be fully automated.
+
+**Free:** Digital PR without the agency — answer journalist queries on <Term term="Help A Reporter Out">HARO</Term>-successors like Connectively, Qwoted, or SOS (Source of Sources); free, and a single quote in a real publication brings a link that outweighs fifty directory submissions. Write genuinely referenceable material (original data, benchmarks, definitive guides) — the only content people link to without being asked. Guest-post on real blogs in your niche. Get your open-source projects and tools listed in awesome-lists and community roundups.
+
+**Paid:** Link-building agencies and marketplaces exist, and I'll be blunt: the cheap end is toxic (link farms that can earn penalties), and the legitimate end — digital PR campaigns — starts around $2–5k/month. Ahrefs/Semrush (\~$100+/mo) are the standard for *analyzing* link profiles and finding competitor links you could replicate. Free alternatives for peeking at backlink data: Search Console's Links report (your own links, complete and free), Bing Webmaster Tools, and Ahrefs' free Webmaster Tools tier for verified sites.
+
+## Part 2: AEO/GEO — being the answer, not just the result
+
+This is the newest game and the least crowded, which makes it the best opportunity on this page. AI assistants answer a growing share of informational queries — but they browse, retrieve, and cite. Your job is to be retrievable and quotable.
+
+### How answer engines choose citations
+
+The mechanism, as far as anyone can observe: user asks → engine runs searches (Perplexity leans on its own + Bing-ish indexes; ChatGPT browsing uses Bing; AI Overviews uses Google) → retrieves candidate pages → extracts *passages* → synthesizes an answer citing the passages that most directly, self-containedly answer the question.
+
+Three consequences fall out of that:
+
+1. **Classic SEO is the qualifying round.** If you're not indexed and reasonably ranked, you're not in the retrieval set at all. Everything in Part 1 feeds Part 2 — and Bing matters again, because two major answer engines retrieve through it.
+2. **Passages win, not pages.** A paragraph that opens with a direct answer to a specific question ("To add JSON-LD in the Next.js App Router, render a `<script type="application/ld+json">` in the page component…") is liftable. A paragraph that opens with throat-clearing is not. Structure content as question-shaped headings followed by self-contained answers — answer first, elaboration after.
+3. **Entities and consistency matter.** Engines resolve *who you are* across the web. A consistent name, bio, and topic focus across your site, GitHub, and social profiles builds the entity graph that makes a model "know" you exist.
+
+### The techniques
+
+**Be crawlable by AI bots.** Check your `robots.txt` and any CDN bot-protection: `GPTBot`, `OAI-SearchBot`, `PerplexityBot`, `ClaudeBot`, `Google-Extended` and friends. Blocking them (Cloudflare now does this by default on some plans!) removes you from AI answers entirely. This is a two-minute check and completely free.
+
+**Ship `llms.txt`.** An emerging convention: a markdown file at `/llms.txt` that gives language models a clean index of your site, optionally with markdown versions of each page. Adoption by engines is still uneven — treat it as a cheap bet, not a guarantee. It costs an hour and this very site ships one.
+
+**Structured data (<Term term="JavaScript Object Notation for Linked Data">JSON-LD</Term>).** Schema.org markup — `Article`/`BlogPosting`, `Person`, `BreadcrumbList` — makes your content machine-legible: explicit authorship, dates, and entity relationships instead of inferred ones. Free, and doubles as classic SEO (rich results).
+
+**Write citable passages.** For each post, ask: "if an AI had to quote one paragraph of this to answer a question, does that paragraph exist?" Add TL;DR summaries, definition-style openings, and stat lines with concrete numbers — models love citing specific figures with sources.
+
+**Be present where models learn.** Answer engines heavily weight Reddit, Stack Overflow, Wikipedia, and community forums — both in training data and live retrieval. A genuinely helpful Reddit answer that mentions your approach is AEO. (It's also just... being helpful. The technique and the ethics align here: astroturfing gets you banned; sincere participation compounds.)
+
+**Free vs paid, honestly:** almost everything above is free — AEO today is mostly *editorial discipline*, not tooling. The paid layer is measurement: tracking whether ChatGPT/Perplexity/AI Overviews actually mention you across many prompts (Profound, SE Ranking's AI module, and similar — enterprise-ish pricing). The manual version: ask each engine the questions you want to be cited for, once a month, and keep a spreadsheet. Tedious, free, and for a personal site entirely sufficient.
+
+## Part 3: Modern reach — distribution beyond the algorithms
+
+The techniques in this part share one idea: **stop waiting to be discovered and place your content where attention already gathers.**
+
+**Communities (free, high effort, high trust).** Reddit, Hacker News, Discord servers, dev.to, Stack Overflow. The iron rule: these platforms punish drive-by self-promotion and reward residents. The 10:1 ratio — ten genuine contributions per one share of your own work — isn't moralizing, it's how the karma/trust systems literally work. One well-received HN or Reddit post can outdraw a month of Google traffic, and community threads themselves rank in Google and get cited by AI engines, so this channel feeds all three discovery engines at once.
+
+**Newsletters — yours and other people's.** Owning an email list is the only distribution that no algorithm can take away from you; that's the strategic reason every creator eventually builds one. *Free:* start collecting emails from day one (Buttondown and beehiiv have free tiers; a simple form works), and submit your best posts to established niche newsletters (TLDR, JavaScript Weekly, etc.) — curators are permanently hungry for good links and inclusion is free. *Paid:* sponsoring those same newsletters ($50 to thousands per issue depending on list size) — one of the better-value paid channels for technical audiences because the targeting is perfect.
+
+**Syndication and repurposing.** One blog post is raw material for: a Twitter/X thread, a LinkedIn post, a dev.to cross-post (with `rel=canonical` back to you — dev.to supports this natively, protecting your SEO), a short video, a newsletter issue. The reasoning: each platform's audience mostly doesn't overlap, and the marginal cost of reformatting is a fraction of writing something new. *Free:* do it by hand, 30–60 minutes per post. *Paid:* repurposing tools and schedulers (Repurpose.io, Buffer, Typefully — $10–30/mo tiers) automate the calendar, not the thinking.
+
+**Digital PR and collaborations.** Podcasts need guests (free — pitch niche shows directly), YouTubers need collab partners, bloggers need interviewees. Original data is the cheat code: run a small survey or benchmark, publish the numbers, and you become the citable source everyone links to. *Paid:* PR agencies ($2k+/mo) do the pitching at scale; press-release wires (PRWeb etc.) exist but are largely worthless for links or reach — save your money.
+
+## Part 4: Social media — converting feeds into traffic
+
+The uncomfortable theory first: **every feed algorithm optimizes for time-on-platform, which means every feed algorithm suppresses outbound links.** A post whose first line is a link is asking the algorithm to promote its own defeat. The playbook that respects this reality:
+
+1. **Deliver value natively.** The thread, carousel, or video should be complete on its own — that's what earns distribution.
+2. **Link in the follow-up.** Reply/comment with the link, put it in your bio, or mention "full writeup on my site." You convert a fraction of the native reach — but a fraction of real reach beats 100% of zero.
+3. **Play per-platform.** LinkedIn rewards professional narrative and dwell time (carousels, longer posts) and its organic reach for individuals is currently the best of the big platforms for professional content. X/Twitter rewards threads and replies — engaging with bigger accounts in your niche puts you in front of their audience free. YouTube is the sleeper: videos rank in Google, get recommended for years (it's a search engine, not a feed), and a screen-recorded walkthrough of something you already wrote is cheap to make. Shorts/Reels/TikTok give the highest raw reach to small accounts of anything on this list — the algorithm doesn't care about your follower count — but convert to site visits worst; treat them as awareness, not traffic.
+4. **Consistency beats virality.** Algorithms favor accounts that post reliably and get steady engagement. Two decent posts a week for a year builds more durable reach than one lucky hit.
+
+**Free:** all of the above. Organic social costs time, not money — batch a week of posts in one sitting, engage 15 minutes a day. Native scheduler tools (X, LinkedIn, Meta Business Suite) are free.
+
+**Paid:** this is the one area where paid is a genuinely different mechanism, not just a faster version of free. Ads buy *guaranteed, targeted impressions* — useful for launches, testing messaging, or retargeting site visitors (show ads only to people who already read your blog — the cheapest, warmest audience that exists; requires the platform pixel installed, which is free). Realistic entry: $5–10/day minimums; boosted posts from \~$10. For traffic to technical content specifically, ads are usually the *worst* <Term term="Return on Investment">ROI</Term> on this page — cold audiences don't click blog ads — while retargeting and newsletter sponsorships are the exceptions that work. Creator tools worth their fee: Typefully/Buffer for scheduling (\~$10–15/mo), and platform subscriptions like X Premium which measurably boost reply visibility.
+
+## The honest summary: what's actually not free?
+
+Working down everything above, the list of things with *no* manual/free path is short:
+
+- **Guaranteed impressions on demand** — only ads sell certainty and speed. The free path (organic) can match the volume but never the timing.
+- **Third-party competitive data at scale** — you can see your own data free (Search Console, Bing WMT, platform analytics), but your *competitors'* keyword and backlink data lives in paid indexes (Ahrefs/Semrush). The manual workaround — reading their content, checking who links to them via free tiers — is real but partial.
+- **Legitimate PR placement at scale** — one person pitching can land a few placements free; fifty placements a quarter is an agency retainer.
+
+Everything else — technical SEO, keyword research, content, AEO, communities, newsletters, social — has a full free path where payment only buys back your hours. Which is the real takeaway: **the constraint in modern reach isn't budget, it's consistent output plus distribution discipline.** A site that publishes genuinely useful things weekly, packages them for passages and feeds, and shows up in its communities will beat a funded site that does none of that.
+
+Pick one channel from each part. Do them for six months. Measure with Search Console and your analytics, kill what's flat, double what moves. That's the whole strategy.

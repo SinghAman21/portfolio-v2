@@ -1,5 +1,5 @@
 
-import BlogList from "@/components/blog/blog-list";
+import BlogIndex from "@/components/blog/blog-index";
 import PageHeader from "@/components/PageHeader";
 import AnimatedSection from "@/components/AnimatedSection";
 
@@ -18,7 +18,7 @@ export default async function BlogPage() {
         />
 
         <AnimatedSection delay="0.6s">
-          <BlogList />
+          <BlogIndex />
         </AnimatedSection>
       </main>
     )
