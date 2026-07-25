@@ -47,16 +47,16 @@ export const resumeWorkExperience: WorkExperienceItem[] = [
     location: "Remote",
     period: "Jun 2026 - Present",
     points: [
-      "• Built full-stack CRM workflows end-to-end using Next.js/NestJS, React Hook Form + Zod validation, and a typed API layer across the application.",
-      "• Led a hard cutover of third-party messaging and scheduling integrations to a new internal service layer, including signed webhook pipelines, idempotent background workers, and DB schema migrations.",
-      "• Found and fixed critical concurrency bugs in production, including a static idempotency key collapsing repeated edits into no-ops and a mid-session auth-redirect race across concurrent requests.",
+      "• Lead Product Engineer for Taolatt Real Estate CRM, shipping 23 full-stack features from backend APIs to React interfaces while defining engineering standards that scaled the platform.",
+      "• Built a reusable React component library with shadcn/ui, React Hook Form, and Zod, supporting scalable state management, filtering, infinite scroll, and multi-select workflows.",
+      "• Integrated messaging and booking services, delivering WhatsApp/email workflows with deduplication, idempotent retries, and real-time calendar synchronization via webhooks.",
     ],
   },
   {
     company: "Actrun",
     title: "Backend Engineer Intern",
     location: "Remote",
-    period: "Month Year - Month Year",
+    period: "Feb 2026 - Jun 2026",
     points: [
       "• Built a deterministic attachment pipeline for chat/Slack, hydrating images/PDFs/text directly into LLM context.",
       "• Set up local and staging test suites, plus a dedicated Slack bot for development/testing workflows.",
