@@ -1,8 +1,23 @@
+"use client";
+
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 import BackNavigation from "@/components/back-navigation";
 
+function formatSeriesName(seriesSlug: string) {
+  return seriesSlug
+    .split("-")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
+}
+
 export default function BlogPostNotFound() {
+  const pathname = usePathname();
+  const [, blogSegment, seriesSlug] = pathname.split("/");
+  const seriesHref = blogSegment === "blog" && seriesSlug ? `/blog/${seriesSlug}` : null;
+  const seriesName = seriesSlug ? formatSeriesName(seriesSlug) : null;
+
   return (
     <main className="mb-32 text-gray-900 dark:text-neutral-400">
       <BackNavigation href="/blog">back</BackNavigation>
@@ -29,12 +44,14 @@ export default function BlogPostNotFound() {
           >
             Browse published posts
           </Link>
-          <Link
-            href="/blog/devops"
-            className="text-gray-600 dark:text-neutral-500 underline underline-offset-4 decoration-gray-300 dark:decoration-neutral-700 hover:text-gray-900 dark:hover:text-neutral-100"
-          >
-            View the DevOps series plan
-          </Link>
+          {seriesHref && seriesName ? (
+            <Link
+              href={seriesHref}
+              className="text-gray-600 dark:text-neutral-500 underline underline-offset-4 decoration-gray-300 dark:decoration-neutral-700 hover:text-gray-900 dark:hover:text-neutral-100"
+            >
+              View the {seriesName} series
+            </Link>
+          ) : null}
         </div>
       </section>
     </main>
