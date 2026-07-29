@@ -15,7 +15,7 @@ export default async function DevopsSeriesPage() {
         <PageHeader
           backHref="/blog"
           title="devops"
-          description="Taking one app from a local cluster to production on Kubernetes — networking, storage, scaling, health checks, and disaster recovery. Read in order, 1 through 16."
+          description="Taking one app from a local cluster to production on Kubernetes — networking, storage, scaling, health checks, and disaster recovery. Read in order, 1 through N."
           titleSize="sm"
           descriptionClassName="mb-12"
         />

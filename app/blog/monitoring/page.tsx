@@ -15,7 +15,7 @@ export default async function MonitoringSeriesPage() {
         <PageHeader
           backHref="/blog"
           title="monitoring"
-          description="Instrumenting a real app with Prometheus and Grafana — the metrics mental model, dashboards that matter, and alerting that doesn't cry wolf. Read in order, 1 through 6."
+          description="Instrumenting a real app with Prometheus and Grafana — the metrics mental model, dashboards that matter, and alerting that doesn't cry wolf. Read in order, 1 through N."
           titleSize="sm"
           descriptionClassName="mb-12"
         />

@@ -15,7 +15,7 @@ export default async function ShopifySeriesPage() {
         <PageHeader
           backHref="/blog"
           title="shopify"
-          description="Building a real Shopify storefront end to end — themes, Liquid, the app-proxy bridge, and a run of production features. Read in order, 1 through 16."
+          description="Building a real Shopify storefront end to end — themes, Liquid, the app-proxy bridge, and a run of production features. Read in order, 1 through N."
           titleSize="sm"
           descriptionClassName="mb-12"
         />

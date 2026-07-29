@@ -1,4 +1,4 @@
-import { notFound } from "next/navigation";
+import { notFound, unstable_rethrow } from "next/navigation";
 import { getAllPosts, getPostBySlug, getAdjacentPosts } from "@/lib/mdx";
 import { extractToc } from "@/lib/toc";
 import { CustomMDX } from "@/components/mdx";
@@ -137,6 +137,8 @@ export default async function BlogPost({
       </main>
     );
   } catch (error) {
+    unstable_rethrow(error);
+
     console.error("Error in blog post page:", error);
     return (
       <main className="mb-32 text-gray-900 dark:text-neutral-400">
