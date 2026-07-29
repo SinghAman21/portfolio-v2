@@ -1,0 +1,101 @@
+---
+title: "1. The System We're Building: The App, the Infrastructure, and the Plan"
+publishDate: "1 May 2026"
+slug: "devops/1-the-system-were-building"
+description: "The setup post for a Kubernetes build series. One small app with real traffic shape, every infrastructure decision made up front, and a plan that goes from `k3d cluster create` to a restore drill where we delete everything on purpose."
+tags: ["kubernetes", "devops", "architecture", "k3d", "series"]
+---
+
+Most Kubernetes tutorials teach you YAML. Copy this Deployment, apply this Service, look — nginx says hello. You finish with a running pod and no idea what you'd do when it crashes at 2 a.m., because nothing in the tutorial ever crashed.
+
+This series does the opposite. We build one real system and keep building on it across the series. Every post assumes the last one. Things break — sometimes because I break them on purpose, more often because I got something wrong and had to debug it with `kubectl describe` and a sinking feeling. By the end there's an API with a database, autoscaling, TLS, health checks, structured logging, three environments, and a backup strategy we've actually tested by deleting the namespace and restoring from a dump.
+
+I'm not an SRE who's seen everything. I'm a platform engineer learning Kubernetes properly by shipping on it, roughly two steps ahead of you. That's the deal: I hit the wall first, I write down where the wall is.
+
+This is the map. If you landed here from a later post wondering "wait, what app is this, what cluster are they on" — this is the answer. Bookmark it.
+
+## The app we're building
+
+Meet **Relay** — a URL shortener with click analytics.
+
+I can hear the groan. A URL shortener is the todo app of backend engineering. But I picked it deliberately, because underneath the boring CRUD there's a traffic shape that exercises almost everything Kubernetes is actually for:
+
+- **A screaming-hot read path.** `GET /:code` looks up a short code and issues a redirect. This is the endpoint that gets hammered when a link goes viral. It needs to be fast, it needs many replicas, and it's what we'll point the autoscaler at.
+- **A write on every single click.** Each redirect also inserts a row into a `clicks` table — timestamp, referrer. So the hot path isn't just a cache read; it touches the database under load. That's a much more honest scaling problem.
+- **A boring CRUD path.** `POST /links` creates a short link, `GET /links/:code/stats` returns click counts. Low traffic, no drama. Useful precisely because it behaves differently from the hot path.
+
+Three endpoints. Two tables — `links (id, code, url, created_at)` and `clicks (id, link_id, ts, referrer)`. Small enough that the application code never gets in the way of the infrastructure lessons, real enough that the infrastructure lessons matter. When we load test in [the HPA post](/blog/devops/9-horizontal-pod-autoscaling), we're not scaling a hello-world — we're scaling something with a database behind it, and the database becomes the bottleneck the way it does in real systems.
+
+If the patterns work for Relay, they port to whatever you're running. The app is a vehicle. The traffic shape is the point.
+
+## The stack, and why each piece
+
+Every decision up front, so no later post has to stop and justify itself.
+
+**The app: Node 22 + Express, plain JavaScript.** No TypeScript, no framework-of-the-month. The app code is deliberately the least interesting part of this series — it exists to have real behavior (a connection pool, a hot path, health endpoints) without demanding attention. It talks to Postgres through the `pg` driver with a connection `Pool`, and it listens on port 3000. When posts change app code — adding `/healthz` and `/readyz` in [the probes post](/blog/devops/12-health-checks-probes), switching to structured logs in [the observability post](/blog/devops/13-logging-and-observability) — you'll see the actual diff.
+
+**The database: PostgreSQL 16.** A real database, in the cluster, with a real persistence problem. A lot of Kubernetes content quietly uses a managed cloud database and skips the hardest part. We're running `postgres:16` as a workload, which forces us to confront [persistent volumes](/blog/devops/7-persistent-storage-pvs-pvcs), [what happens to data when pods die](/blog/devops/2-how-kubernetes-thinks), and eventually [backups we've actually tested](/blog/devops/15-disaster-recovery-backups). Is self-hosting Postgres in Kubernetes what I'd recommend for your production system? Honestly, probably not — managed Postgres exists for good reasons. But it's the single best teaching workload in existence, and by the end you'll understand exactly what a managed database is saving you from.
+
+**And yes — Postgres runs as a Deployment, not a StatefulSet.** This is the decision that will get me yelled at, so let me flag it now: single replica, `strategy: Recreate`, one PersistentVolumeClaim. For exactly one replica, a StatefulSet buys you almost nothing over this, and the Deployment version is easier to reason about while you're learning. The full argument — including precisely when this stops being okay — is in [Deployments vs StatefulSets vs DaemonSets](/blog/devops/3-deployments-statefulsets-daemonsets). I'd rather make a defensible simplification out loud than a silent one you discover later.
+
+**The cluster: k3d, locally.** k3d runs [k3s](https://k3s.io) — a lightweight but fully conformant Kubernetes distribution — inside Docker containers. One command gives you a multi-node cluster (we run one server, two agents, Kubernetes ~1.31) on a laptop. I evaluated the usual suspects: minikube is fine but heavier; kind is excellent and if you already use it, nearly everything here transfers directly. I went with k3d for two freebies that pay off later in the series: k3s **bundles metrics-server**, so [autoscaling](/blog/devops/9-horizontal-pod-autoscaling) works out of the box, and it ships the **local-path StorageClass** as default, so [persistent volumes](/blog/devops/7-persistent-storage-pvs-pvcs) work without installing a provisioner. Fewer yaks to shave, more Kubernetes to learn.
+
+One honest caveat baked in from day one: we create the cluster with Traefik — k3s's bundled ingress controller — **disabled**. Not because Traefik is bad, but because [the ingress post](/blog/devops/11-ingress-routing-tls) uses ingress-nginx, the controller you're most likely to meet at work, and disabling Traefik up front saves rebuilding the cluster mid-series. [The local setup post](/blog/devops/4-kubernetes-running-locally) shows the exact command.
+
+**Images: a plain Dockerfile, loaded straight into the cluster.** The image is `node:22-alpine` based, tagged `relay-api:v1` and bumped (`:v2`, `:v3`...) whenever a post changes app code. We load it with `k3d image import` instead of pushing to a registry. This is a dev-only shortcut and I'll say so every time it appears — in production you push to a real registry and the cluster pulls from it. For a local learning loop, `k3d image import` removes an entire category of auth friction. (It also sets up the single most classic beginner failure, `ImagePullBackOff`, which we hit and debug for real in post 04.)
+
+**Raw YAML, no Helm — at first.** Every manifest in this series is YAML you can read top to bottom. Helm and its templating solve a real problem, but reaching for it before you can write the underlying manifests by hand is how you end up able to install charts and unable to debug them. We hold the line until [the multi-environment post](/blog/devops/14-multi-environment-kustomize), where we adopt Kustomize — which is built into kubectl and patches plain YAML rather than templating it — and I make the case for why that's enough for a system this size. The one exception: installing third-party infrastructure like ingress-nginx and the logging stack, where Helm is simply how the ecosystem ships things and writing those manifests by hand teaches you nothing.
+
+**Everything in the `default` namespace — for now.** This is a genuine mistake I'm making on purpose, sort of. Namespaces show up conceptually in [post 02](/blog/devops/2-how-kubernetes-thinks), but we don't *use* them until [post 14](/blog/devops/14-multi-environment-kustomize) splits the system into `relay-dev`, `relay-staging`, and `relay-prod`. When we get to [the production readiness post](/blog/devops/16-production-readiness-checklist), "we ran in `default` for way too long" is on the list of things I'd do differently. You get to watch the mistake and the correction.
+
+**Load testing: `hey` for quick checks, `k6` when it matters.** You can't learn scaling behavior without generating load. `hey` is a one-liner for "throw 200 concurrent requests at this and tell me what happened." `k6` gives us scripted, ramped load for [the autoscaling post](/blog/devops/9-horizontal-pod-autoscaling), where we need to watch the HPA scale from 2 replicas to 10 and — the part nobody warns you about — watch how slowly it scales back down.
+
+## The shape of the thing
+
+By the end, this is the system:
+
+- `relay-api` — a Deployment, 2–10 replicas under an HPA, resource requests and limits tuned from actual load-test data, liveness and readiness probes, behind a ClusterIP Service.
+- `postgres` — single-replica Deployment, data on a PersistentVolumeClaim, connection details injected from a ConfigMap and a Secret.
+- An ingress-nginx controller terminating TLS for `relay.local`, routing into the Service.
+- Loki, Alloy, and Grafana collecting structured JSON logs from everything.
+- A `postgres-backup` CronJob running `pg_dump` on a schedule — with a restore procedure we've proven works by nuking the environment and bringing it back.
+- Three environments built from one Kustomize base.
+
+Nothing exotic. That's deliberate. This is the boring, load-bearing 80% of Kubernetes that every real cluster uses, built one piece at a time, with each piece earning its place because something broke without it.
+
+## The plan
+
+**Phase 1 — Foundation.** A complete, deployable system.
+
+- **The system we're building** — you are here.
+- [How Kubernetes actually thinks about things](/blog/devops/2-how-kubernetes-thinks) — desired state, control loops, why you never create a bare Pod. The mental model everything else hangs off.
+- [Deployments vs StatefulSets vs DaemonSets](/blog/devops/3-deployments-statefulsets-daemonsets) — the workload types, and the identity-vs-interchangeability question that picks between them.
+- [Getting Kubernetes running locally](/blog/devops/4-kubernetes-running-locally) — the k3d cluster, the first Deployment, and our first `ImagePullBackOff`.
+- [Networking in Kubernetes: Services, DNS, and why it's not just TCP/IP](/blog/devops/5-kubernetes-networking-services-dns) — pod IPs are cattle, Services are the stable thing, and how `postgres` becomes a hostname.
+- [Multi-replica scaling and load balancing](/blog/devops/6-multi-replica-scaling) — three replicas, rolling updates, killing pods on purpose, and the in-memory cache that broke the moment we scaled.
+- [Persistent storage: PVs, PVCs, and databases that don't evaporate](/blog/devops/7-persistent-storage-pvs-pvcs) — Postgres gets a disk that outlives its pod.
+- [Configuration and secrets](/blog/devops/8-configmaps-and-secrets) — the hardcoded connection string moves out of the image, and base64 gets the disrespect it deserves.
+
+**Phase 2 — Depth.** The system starts handling load like it means it.
+
+- [Horizontal Pod Autoscaling](/blog/devops/9-horizontal-pod-autoscaling) — the cluster scales itself while k6 tries to hurt it.
+- [Resource requests and limits](/blog/devops/10-resource-requests-and-limits) — what `OOMKilled` and exit code 137 actually mean, and the numbers we settled on after load testing.
+- [Ingress: routing traffic from the internet to your services](/blog/devops/11-ingress-routing-tls) — ingress-nginx, host routing, and real TLS locally with mkcert.
+- [Health checks: liveness, readiness, and staying responsive](/blog/devops/12-health-checks-probes) — including the classic self-inflicted outage where a liveness probe checks the database.
+- [Logging and observability](/blog/devops/13-logging-and-observability) — from `kubectl logs` archaeology to structured logs you can actually query.
+
+**Phase 3 — Production and scale.**
+
+- [Multi-environment deployments](/blog/devops/14-multi-environment-kustomize) — dev, staging, and prod from one base, without copy-pasting YAML.
+- [Disaster recovery and backups](/blog/devops/15-disaster-recovery-backups) — scheduled dumps, and the restore drill where we delete everything on purpose.
+- [Production readiness checklist and common failure modes](/blog/devops/16-production-readiness-checklist) — the honest audit: what breaks, what I'd do earlier next time, and what this series still doesn't cover.
+
+References (posts 2, 3, and 5) sit right before the feature posts that need them, so you're never asked to apply a concept before it's been explained.
+
+## What this series is not
+
+It's not a certification course — there's CKA material we never touch. It's not cloud-provider specific; everything runs on your laptop, and the concepts transfer to EKS/GKE/AKS because k3s is conformant Kubernetes, not a toy. And it's not infallible. Where I've made a call I'm not sure survives contact with a bigger system, I say so in the post, not in a correction six months later.
+
+What you need to follow along: Docker installed, comfort with a terminal, and a working idea of what containers are and why they exist. If "it's a process with its own filesystem and network namespace" sounds roughly right to you, you're ready.
+
+Next up: before we touch a single manifest, [how Kubernetes actually thinks](/blog/devops/2-how-kubernetes-thinks) — because every confusing thing Kubernetes does becomes obvious once you understand that you never tell it what to *do*, only what should be *true*.
