@@ -23,6 +23,7 @@
     "geist": "^1.5.1",
     "gray-matter": "^4.0.3",
     "lucide-react": "^0.556.0",
+    "mermaid": "^11.16.0",
     "motion": "^12.23.25",
     "next": "16.0.8",
     "next-mdx-remote": "^6.0.0",

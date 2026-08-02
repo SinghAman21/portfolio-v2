@@ -26,6 +26,12 @@ function Blockquote(props: any) {
 }
 
 function Code({ children, ...props }: any) {
+  const className = props.className || "";
+
+  if (className.includes("language-mermaid")) {
+    return <code {...props}>{children}</code>;
+  }
+
   const codeHTML = highlight(children);
 
   return <code dangerouslySetInnerHTML={{ __html: codeHTML }} {...props} />;
