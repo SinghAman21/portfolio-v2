@@ -1,11 +1,12 @@
 interface TechnicalSkills {
   languages: string;
-  frameworks: string;
-  cloudPlatforms: string;
-  runtimes: string;
-  ormDatabase: string;
-  tools: string;
-  softSkills: string;
+  frontend: string;
+  backend: string;
+  aiDeveloperTools: string;
+  cloudInfrastructure: string;
+  databases: string;
+  devOps: string;
+  systemDesign: string;
 }
 
 interface TechnicalSkillsSectionProps {
@@ -29,41 +30,47 @@ export default function TechnicalSkillsSection({ skills }: TechnicalSkillsSectio
           </p>
           <p>
             <span className="text-gray-800 dark:text-neutral-200">
-              Frameworks:
+              Frontend:
             </span>{" "}
-            {skills.frameworks}
+            {skills.frontend}
           </p>
           <p>
             <span className="text-gray-800 dark:text-neutral-200">
-              Cloud & Platforms:
+              Backend:
             </span>{" "}
-            {skills.cloudPlatforms}
+            {skills.backend}
+          </p>
+          <p>
+            <span className="text-gray-800 dark:text-neutral-200">
+              AI & Developer Tools:
+            </span>{" "}
+            {skills.aiDeveloperTools}
           </p>
         </div>
         <div className="space-y-1">
           <p>
             <span className="text-gray-800 dark:text-neutral-200">
-              Runtimes:
+              Cloud & Infrastructure:
             </span>{" "}
-            {skills.runtimes}
+            {skills.cloudInfrastructure}
           </p>
           <p>
             <span className="text-gray-800 dark:text-neutral-200">
-              ORM and Database:
+              Databases:
             </span>{" "}
-            {skills.ormDatabase}
+            {skills.databases}
           </p>
           <p>
             <span className="text-gray-800 dark:text-neutral-200">
-              Tools:
+              DevOps:
             </span>{" "}
-            {skills.tools}
+            {skills.devOps}
           </p>
           <p>
             <span className="text-gray-800 dark:text-neutral-200">
-              Soft Skills:
+              System Design:
             </span>{" "}
-            {skills.softSkills}
+            {skills.systemDesign}
           </p>
         </div>
       </div>

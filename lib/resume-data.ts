@@ -16,12 +16,13 @@ export interface ProjectItem {
 
 export interface TechnicalSkillsData {
   languages: string;
-  frameworks: string;
-  cloudPlatforms: string;
-  runtimes: string;
-  ormDatabase: string;
-  tools: string;
-  softSkills: string;
+  frontend: string;
+  backend: string;
+  aiDeveloperTools: string;
+  cloudInfrastructure: string;
+  databases: string;
+  devOps: string;
+  systemDesign: string;
 }
 
 export interface VolunteerExperienceItem {
@@ -130,23 +131,29 @@ export const resumeProjects: ProjectItem[] = [
 ];
 
 export const technicalSkills: TechnicalSkillsData = {
-  languages: "JavaScript, Python, Go",
-  frameworks: "Express.js, React.js, Next.js, Vite",
-  cloudPlatforms: "AWS, Linux",
-  runtimes: "NodeJS, Bun, pnpm",
-  ormDatabase: "Prisma, Drizzle, Mongoose, PostgreSQL, MySQL, SQLite, MongoDB",
-  tools: "Docker, Git",
-  softSkills:
-    "Leadership, Collaborativity, Adaptability, Event Management, Problem Solving, Public Speaking, Time Management",
+  languages: "Go, TypeScript, JavaScript, Python",
+  frontend: "React.js, Next.js",
+  backend:
+    "Express.js, NestJS, Django, FastAPI, REST APIs, Authentication (JWT/OAuth), WebSockets",
+  aiDeveloperTools:
+    "AI Agents, MCP Servers, Agentic Workflows, LLM Integrations, Tool Calling, Context Engineering",
+  cloudInfrastructure:
+    "AWS (EC2, S3, IAM, Lambda, CloudFront), Docker, Nginx, Linux, Redis, Cloudflare",
+  databases: "PostgreSQL, MySQL, MongoDB, SQLite, Prisma, Drizzle ORM",
+  devOps: "Docker, Git, GitHub Actions, CI/CD, PM2, Linux, Bash",
+  systemDesign:
+    "Microservices, Distributed Systems, System Design, Caching, Message Queues (BullMQ), API Design, Scalability, Load Balancing",
 };
 
 export const volunteerExperience: VolunteerExperienceItem = {
   organization: "GDG VIT",
   title: "OSS Lead",
   location: "Hybrid",
-  period: "2025 – Present",
+  period: "Sept 2025 - Jun 2026",
   points: [
-    "• Collaborated with diverse teams to conduct many events and workshops where I am directly engaging students and contributing to an increment in technical awareness.",
+    "• Managed and hosted a 12-hour hackathon with teams participating from across India.",
+    "• Led a diverse team of tech enthusiasts to build and deploy multiple events and workshops that improved technical awareness among students.",
+    "• Collaborated with communities including GDG IIIT Kalyani, GDG UMIT, GeeksforGeeks, and SMAAASH to foster stronger bonds while maintaining professionalism.",
   ],
 };
 
