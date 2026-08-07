@@ -76,7 +76,7 @@ export default function NotFound() {
           break
       }
 
-      
+
       let hitWall = false
       if (head.x < 0) {
         head.x = GRID_SIZE - 1
@@ -85,7 +85,7 @@ export default function NotFound() {
         head.x = 0
         hitWall = true
       }
-      
+
       if (head.y < 0) {
         head.y = GRID_SIZE - 1
         hitWall = true
@@ -167,7 +167,7 @@ export default function NotFound() {
     const isFood = food.x === x && food.y === y
 
     let cellClass = "w-4 h-4 border border-neutral-700"
-    
+
     if (isFood) {
       cellClass += " bg-red-500"
     } else if (isHead) {
@@ -192,9 +192,9 @@ export default function NotFound() {
         GeistMono.className,
         'text-[13px] [text-rendering:geometricPrecision] container'
       )}>
-      <Header 
-        name="Aman Singh" 
-        location="Mumbai, India." 
+      <Header
+        name="Aman Singh"
+        location="Mumbai, India."
       />
 
       <section className="mt-6">
@@ -220,9 +220,9 @@ export default function NotFound() {
 
           {/* Game Board */}
           <div className="flex justify-center mb-4">
-            <div 
+            <div
               className="grid gap-0 bg-neutral-900 p-2 border-2 border-neutral-600 rounded"
-              style={{ 
+              style={{
                 gridTemplateColumns: `repeat(${GRID_SIZE}, minmax(0, 1fr))`,
                 width: 'fit-content'
               }}
@@ -241,7 +241,7 @@ export default function NotFound() {
                 <p className="text-neutral-500 text-sm">Use arrow keys to control the snake</p>
               </div>
             )}
-            
+
             {gameOver && (
               <div className="space-y-2">
                 <p className="text-red-400 font-medium">Game Over!</p>
@@ -260,33 +260,33 @@ export default function NotFound() {
           {/* Controls for mobile */}
           <div className="mt-4 grid grid-cols-3 gap-2 max-w-48 mx-auto md:hidden">
             <div></div>
-            <button 
+            <button
               onClick={() => direction !== 'DOWN' && setDirection('UP')}
               className="bg-neutral-700 hover:bg-neutral-600 text-neutral-200 p-2 rounded text-sm"
             >
               ↑
             </button>
             <div></div>
-            <button 
+            <button
               onClick={() => direction !== 'RIGHT' && setDirection('LEFT')}
               className="bg-neutral-700 hover:bg-neutral-600 text-neutral-200 p-2 rounded text-sm"
             >
               ←
             </button>
-            <button 
+            <button
               onClick={() => !gameStarted ? startGame() : gameOver ? resetGame() : null}
               className="bg-neutral-600 hover:bg-neutral-500 text-neutral-200 p-2 rounded text-xs"
             >
               {!gameStarted ? 'START' : gameOver ? 'RESET' : 'PAUSE'}
             </button>
-            <button 
+            <button
               onClick={() => direction !== 'LEFT' && setDirection('RIGHT')}
               className="bg-neutral-700 hover:bg-neutral-600 text-neutral-200 p-2 rounded text-sm"
             >
               →
             </button>
             <div></div>
-            <button 
+            <button
               onClick={() => direction !== 'UP' && setDirection('DOWN')}
               className="bg-neutral-700 hover:bg-neutral-600 text-neutral-200 p-2 rounded text-sm"
             >
@@ -324,7 +324,7 @@ export default function NotFound() {
         <div className="mt-2 flex flex-wrap gap-2">
           <span className="whitespace-nowrap">
             <span>connect on </span>
-            <Anchor href="https://x.com/SinghAman21_" target="_blank">
+            <Anchor href="https://x.com/SinghAmanHQ" target="_blank">
               {'𝕏'}
             </Anchor>
             <span className="mx-1 text-neutral-400/50">·</span>
@@ -332,11 +332,11 @@ export default function NotFound() {
               GitHub
             </Anchor>
             <span className="mx-1 text-neutral-400/50">·</span>
-            <Anchor href="https://www.linkedin.com/in/aman-singh21/" target="_blank">
+            <Anchor href="https://www.linkedin.com/in/singhamanhq/" target="_blank">
               LinkedIn
             </Anchor>
             <span className="mx-1 text-neutral-400/50">·</span>
-            <Anchor href="https://peerlist.io/singhaman21/" target="_blank">
+            <Anchor href="https://peerlist.io/singhamanhq/" target="_blank">
               Peerlist
             </Anchor>
           </span>
@@ -351,4 +351,3 @@ export default function NotFound() {
     </main>
   )
 }
-

@@ -48,9 +48,9 @@ export const metadata: Metadata = {
     description:
       "Aman Singh is a full-stack software developer building scalable web applications. Explore projects, experience, and blog.",
     images: ["/og-image.webp"],
-    creator: "@SinghAman21_",
-    site: "@SinghAman21_",
-    siteId: "@SinghAman21_",
+    creator: "@SinghAmanHQ",
+    site: "@SinghAmanHQ",
+    siteId: "@SinghAmanHQ",
   },
   alternates: {
     canonical: "https://singhaman.me",

@@ -42,7 +42,7 @@ export default function ResumeHeader() {
           </span>
           <span>
             <Link
-              href="https://www.linkedin.com/in/aman-singh21/"
+              href="https://www.linkedin.com/in/singhamanhq/"
               target="_blank"
               className="text-gray-700 dark:text-stone-300 underline decoration-gray-500 dark:decoration-stone-400 decoration-[0.5px] underline-offset-4 transition-colors hover:text-gray-900 dark:hover:text-stone-200 flex items-center gap-1"
             >
@@ -52,7 +52,7 @@ export default function ResumeHeader() {
           </span>
           <span>
             <Link
-              href="https://peerlist.io/singhaman21/"
+              href="https://peerlist.io/singhamanhq/"
               target="_blank"
               className="text-gray-700 dark:text-stone-300 underline decoration-gray-500 dark:decoration-stone-400 decoration-[0.5px] underline-offset-4 transition-colors hover:text-gray-900 dark:hover:text-stone-200 flex items-center gap-1"
             >

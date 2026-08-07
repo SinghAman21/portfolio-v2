@@ -134,9 +134,9 @@ export const metadata: Metadata = {
   twitter: {
     title: "Aman Singh — Full-Stack Web Developer & Software Engineer",
     card: "summary_large_image",
-    creator: "@SinghAman21_",
-    site: "@SinghAman21_",
-    siteId: "@SinghAman21_",
+    creator: "@SinghAmanHQ",
+    site: "@SinghAmanHQ",
+    siteId: "@SinghAmanHQ",
     description:
       "Aman Singh is a full-stack software developer specializing in Next.js, React, TypeScript, and Node.js. Explore projects, experience, and technical writing.",
     images: ["/og-image.webp"],
@@ -166,10 +166,10 @@ export default function RootLayout({
               url: "https://singhaman.me",
               image: "https://singhaman.me/og-image.webp",
               sameAs: [
-                "https://x.com/SinghAman21_",
+                "https://x.com/SinghAmanHQ",
                 "https://github.com/SinghAman21",
-                "https://www.linkedin.com/in/aman-singh21/",
-                "https://peerlist.io/singhaman21/",
+                "https://www.linkedin.com/in/singhamanhq/",
+                "https://peerlist.io/singhamanhq/",
               ],
               jobTitle: "Full-Stack Software Developer",
               worksFor: {

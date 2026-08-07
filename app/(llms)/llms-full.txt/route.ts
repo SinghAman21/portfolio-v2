@@ -21,9 +21,9 @@ Currently exploring new domains in technology while staying focused on building 
 ### Social Links
 
 - [GitHub](https://github.com/SinghAman21)
-- [Twitter/X](https://x.com/SinghAman21_)
-- [LinkedIn](https://www.linkedin.com/in/aman-singh21)
-- [Peerlist](https://peerlist.io/singhaman21)
+- [Twitter/X](https://x.com/SinghAmanHQ)
+- [LinkedIn](https://www.linkedin.com/in/singhamanhq)
+- [Peerlist](https://peerlist.io/singhamanhq)
 
 ### Tech Stack
 

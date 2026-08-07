@@ -63,7 +63,7 @@ routes.forEach((r) => {
 
 console.log(`\n${colors.brightGreen}${colors.bold}🌐 → Connect${colors.reset}`);
 console.log(
-  `  𝕏 ${createHyperlink("@SinghAman21_", "https://x.com/SinghAman21_")}  💻 ${createHyperlink("SinghAman21", "https://github.com/SinghAman21")}`,
+  `  𝕏 ${createHyperlink("@SinghAmanHQ", "https://x.com/SinghAmanHQ")}  💻 ${createHyperlink("SinghAman21", "https://github.com/SinghAman21")}`,
 );
 console.log(
   `  ✉️  ${createHyperlink("work.singhaman@gmail.com", "mailto:work.singhaman@gmail.com")}`,
