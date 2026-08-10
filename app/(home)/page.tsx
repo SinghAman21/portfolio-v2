@@ -109,6 +109,13 @@ export default function Home() {
       </div>
 
       <HomeLink
+        href="/opensource"
+        label="open source"
+        description="Public GitHub contributions across community tools, documentation, and developer infrastructure."
+        animationDelay="0.25s"
+      />
+
+      <HomeLink
         href="/about"
         label="about"
         description="See yourself about me and how I reached the current stage of my journey as a developer."
