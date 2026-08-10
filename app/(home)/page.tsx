@@ -113,6 +113,7 @@ export default function Home() {
         label="open source"
         description="Public GitHub contributions across community tools, documentation, and developer infrastructure."
         animationDelay="0.25s"
+        shortcutKey="O"
       />
 
       <HomeLink

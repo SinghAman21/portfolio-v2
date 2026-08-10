@@ -23,7 +23,6 @@ interface OpenSourceContribution {
   number: number;
   title: string;
   status: ContributionStatus;
-  year: string;
   url: string;
 }
 
@@ -35,7 +34,6 @@ const contributions: OpenSourceContribution[] = [
     number: 1973,
     title: "feat(export): add --with-sources to wire Obsidian notes to source content",
     status: "open",
-    year: "2026",
     url: "https://github.com/Graphify-Labs/graphify/pull/1973",
   },
   {
@@ -45,7 +43,6 @@ const contributions: OpenSourceContribution[] = [
     number: 2105,
     title: "fix(fortran): map source_location back through cpp linemarkers",
     status: "open",
-    year: "2026",
     url: "https://github.com/Graphify-Labs/graphify/pull/2105",
   },
   {
@@ -55,7 +52,6 @@ const contributions: OpenSourceContribution[] = [
     number: 2092,
     title: "Fortran preprocessor line numbers produce wrong source locations",
     status: "open",
-    year: "2026",
     url: "https://github.com/Graphify-Labs/graphify/issues/2092",
   },
   {
@@ -65,7 +61,6 @@ const contributions: OpenSourceContribution[] = [
     number: 2200,
     title: "fix(boat): scrub hero-to-badge transition with scroll progress",
     status: "merged",
-    year: "2026",
     url: "https://github.com/helm/helm-www/pull/2200",
   },
   {
@@ -75,7 +70,6 @@ const contributions: OpenSourceContribution[] = [
     number: 39,
     title: "Tweakcn integration Issue #38",
     status: "merged",
-    year: "2025",
     url: "https://github.com/Jpisnice/shadcn-ui-mcp-server/pull/39",
   },
   {
@@ -85,7 +79,6 @@ const contributions: OpenSourceContribution[] = [
     number: 155,
     title: "Woc issue #150 fix",
     status: "merged",
-    year: "2026",
     url: "https://github.com/PerformanC/NodeLink/pull/155",
   },
   {
@@ -95,7 +88,6 @@ const contributions: OpenSourceContribution[] = [
     number: 153,
     title: "fix: correctly decode and validate basic auth for metrics",
     status: "merged",
-    year: "2026",
     url: "https://github.com/PerformanC/NodeLink/pull/153",
   },
   {
@@ -105,7 +97,6 @@ const contributions: OpenSourceContribution[] = [
     number: 15,
     title: "feat: auto-sliding marquee-style carousel",
     status: "merged",
-    year: "2026",
     url: "https://github.com/browseping/web/pull/15",
   },
   {
@@ -115,7 +106,6 @@ const contributions: OpenSourceContribution[] = [
     number: 1884,
     title: "fix(dedup): correct id-collision warning and prefer defining file",
     status: "closed",
-    year: "2026",
     url: "https://github.com/Graphify-Labs/graphify/pull/1884",
   },
   {
@@ -125,7 +115,6 @@ const contributions: OpenSourceContribution[] = [
     number: 1926,
     title: "fix(build): make semantic id-remap idempotent for dot-dir files",
     status: "closed",
-    year: "2026",
     url: "https://github.com/Graphify-Labs/graphify/pull/1926",
   },
   {
@@ -135,7 +124,6 @@ const contributions: OpenSourceContribution[] = [
     number: 2062,
     title: "graphify uninstall deletes user-written content",
     status: "closed",
-    year: "2026",
     url: "https://github.com/Graphify-Labs/graphify/issues/2062",
   },
   {
@@ -145,7 +133,6 @@ const contributions: OpenSourceContribution[] = [
     number: 2104,
     title: "fix(dedup): merge same-ID node attributes instead of discarding them",
     status: "closed",
-    year: "2026",
     url: "https://github.com/Graphify-Labs/graphify/pull/2104",
   },
   {
@@ -155,7 +142,6 @@ const contributions: OpenSourceContribution[] = [
     number: 2091,
     title: "Default dedup discards a same-ID node's attributes instead of merging them",
     status: "closed",
-    year: "2026",
     url: "https://github.com/Graphify-Labs/graphify/issues/2091",
   },
   {
@@ -165,7 +151,6 @@ const contributions: OpenSourceContribution[] = [
     number: 1942,
     title: "fix(cache): key semantic cache on the extraction prompt",
     status: "closed",
-    year: "2026",
     url: "https://github.com/Graphify-Labs/graphify/pull/1942",
   },
   {
@@ -175,7 +160,6 @@ const contributions: OpenSourceContribution[] = [
     number: 1947,
     title: "fix(extract): anchor source_file on the scan root, not the --out dir",
     status: "closed",
-    year: "2026",
     url: "https://github.com/Graphify-Labs/graphify/pull/1947",
   },
 ];
@@ -248,7 +232,6 @@ function OpenSourceItem({ contribution }: { contribution: OpenSourceContribution
               <Icon className="h-4 w-4" />
               {status.label}
             </span>
-            <span className="hidden sm:inline">{contribution.year}</span>
           </div>
         </Link>
       </div>

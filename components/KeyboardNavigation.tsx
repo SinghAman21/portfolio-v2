@@ -15,6 +15,7 @@ const routes: Route[] = [
   { path: '/experience', label: 'Experience', key: 'E' },
   { path: '/projects', label: 'Projects', key: 'P' },
   { path: '/blog', label: 'Blog', key: 'B' },
+  { path: '/opensource', label: 'Open Source', key: 'O' },
   { path: '/about', label: 'About', key: 'A' },
   { path: '/resume', label: 'Resume', key: 'R' },
 ];
@@ -217,4 +218,3 @@ export default function KeyboardNavigation() {
     </div>
   );
 }
-
