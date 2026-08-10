@@ -2,7 +2,7 @@
 title: "3. Deployments vs StatefulSets vs DaemonSets: When to Use Each"
 publishDate: "31 July 2026"
 slug: "devops/3-deployments-statefulsets-daemonsets"
-description: "The workload types boil down to one question: are your replicas interchangeable, or do they have identity? Get that right and the Deployment/StatefulSet choice makes itself — including why Relay's Postgres is (controversially) not a StatefulSet."
+description: "The workload types boil down to one question: are your replicas interchangeable, or do they have identity? Get that right and the Deployment/StatefulSet choice makes itself — including why Mini Order System's Postgres is (controversially) not a StatefulSet."
 tags: ["kubernetes", "devops", "deployments", "statefulsets", "daemonsets", "workloads", "reference", "series"]
 ---
 
@@ -12,13 +12,13 @@ That's it. That's the whole decision. Deployments are for interchangeable replic
 
 I wish someone had said this to me before I spent an evening reading the StatefulSet docs trying to figure out whether our Postgres "counts as stateful." (Spoiler: state and StatefulSet are related but not the same thing, and yes, that naming is a menace.)
 
-In [How Kubernetes Actually Thinks](/blog/devops/2-how-kubernetes-thinks) I made the case that you never create bare Pods — you declare a desired state and a controller maintains it. This post is about picking *which* controller. We'll need the answer immediately because next, we'll [deploy Relay's API as a Deployment](/blog/devops/4-kubernetes-running-locally), and in [the persistent storage post](/blog/devops/7-persistent-storage-pvs-pvcs) I put Postgres on the cluster and make a choice some people will yell at me for.
+In [How Kubernetes Actually Thinks](/blog/devops/2-how-kubernetes-thinks) I made the case that you never create bare Pods — you declare a desired state and a controller maintains it. This post is about picking *which* controller. We'll need the answer immediately because next, we'll [deploy Mini Order System's API as a Deployment](/blog/devops/4-kubernetes-running-locally), and in [the persistent storage post](/blog/devops/7-persistent-storage-pvs-pvcs) I put Postgres on the cluster and make a choice some people will yell at me for.
 
 ## The mental model: cattle vs pets, but for real this time
 
 You've heard the cattle/pets analogy. Here's what it concretely means in Kubernetes terms.
 
-A **Deployment** treats every replica as cattle. When you run three replicas of `relay-api`, the pods get names like `relay-api-7d9f8b6c4-x2vlp` — a random hash, then more random characters. Kubernetes is telling you something with that name: *this pod's individual existence is meaningless.* Kill one, and the ReplicaSet spins up a replacement with a completely different name, possibly on a different node, with a different IP. No pod is special. Traffic reaches them through a [Service](/blog/devops/5-kubernetes-networking-services-dns) that load-balances across whoever happens to be alive.
+A **Deployment** treats every replica as cattle. When you run three replicas of `mini-order-backend`, the pods get names like `mini-order-backend-7d9f8b6c4-x2vlp` — a random hash, then more random characters. Kubernetes is telling you something with that name: *this pod's individual existence is meaningless.* Kill one, and the ReplicaSet spins up a replacement with a completely different name, possibly on a different node, with a different IP. No pod is special. Traffic reaches them through a [Service](/blog/devops/5-kubernetes-networking-services-dns) that load-balances across whoever happens to be alive.
 
 A **StatefulSet** treats every replica as a pet with a name tag. Pods are named `postgres-0`, `postgres-1`, `postgres-2` — stable, ordinal, predictable. If `postgres-1` dies, its replacement is *also* named `postgres-1`, gets the same stable DNS hostname (`postgres-1.postgres.default.svc.cluster.local`), and — this is the important part — reattaches to the same <Term term="PersistentVolumeClaim: a Kubernetes request for durable storage that a Pod can mount">PersistentVolumeClaim</Term> the old `postgres-1` was using. Identity survives death.
 
@@ -36,31 +36,31 @@ Now the trap, because everyone falls into it: **"my app has state" does not mean
 
 A Deployment doesn't manage pods directly. It manages **ReplicaSets**, and the ReplicaSet manages pods. That indirection is what makes rolling updates work: when you change the pod template (new image, new env var), the Deployment creates a *new* ReplicaSet and gradually shifts replicas from old to new. Rollback is just shifting back. We'll watch that happen live in [the multi-replica scaling post](/blog/devops/6-multi-replica-scaling).
 
-Here's Relay's API, minimally:
+Here's Mini Order System's API, minimally:
 
 ```yaml
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: relay-api
+  name: mini-order-backend
 spec:
   replicas: 3
   selector:
     matchLabels:
-      app: relay-api
+      app: mini-order-backend
   template:
     metadata:
       labels:
-        app: relay-api
+        app: mini-order-backend
     spec:
       containers:
-        - name: relay-api
-          image: relay-api:v1
+        - name: mini-order-backend
+          image: mini-order-backend:v1
           ports:
             - containerPort: 3000
 ```
 
-The `selector` / `labels` pairing confused me at first — why say `app: relay-api` twice? Because the Deployment finds its pods by label query, not by parentage. The selector is the search; the template labels make new pods findable by that search. They must match or the API server rejects it.
+The `selector` / `labels` pairing confused me at first — why say `app: mini-order-backend` twice? Because the Deployment finds its pods by label query, not by parentage. The selector is the search; the template labels make new pods findable by that search. They must match or the API server rejects it.
 
 One field people ignore until it bites them: `strategy`. The default is `RollingUpdate`, which keeps old and new pods running simultaneously during a rollout. That's exactly right for stateless APIs and exactly wrong for some other things — hold that thought.
 
@@ -116,11 +116,11 @@ The use cases are all infrastructure-shaped: log collectors, node monitoring age
 
 If you're writing application code, you almost certainly don't want a DaemonSet. I mention it here mostly so that when you run `kubectl get pods -A` on your [k3d cluster](/blog/devops/4-kubernetes-running-locally) and see system pods replicated exactly once per node, you know what's doing that.
 
-And for completeness, the fourth shape: **Jobs** run pods to *completion* — the pod is supposed to exit, and exiting successfully is the desired state, which inverts everything the other controllers assume. **CronJobs** create Jobs on a schedule. Relay's database backups will be a CronJob in [the disaster recovery post](/blog/devops/15-disaster-recovery-backups).
+And for completeness, the fourth shape: **Jobs** run pods to *completion* — the pod is supposed to exit, and exiting successfully is the desired state, which inverts everything the other controllers assume. **CronJobs** create Jobs on a schedule. Mini Order System's database backups will be a CronJob in [the disaster recovery post](/blog/devops/15-disaster-recovery-backups).
 
-## The controversial part: Relay's Postgres is a Deployment
+## The controversial part: Mini Order System's Postgres is a Deployment
 
-In [the persistent storage post](/blog/devops/7-persistent-storage-pvs-pvcs), Relay's Postgres goes onto the cluster like this: a plain Deployment, `replicas: 1`, `strategy: Recreate`, one ordinary <Term term="PersistentVolumeClaim: a Kubernetes request for durable storage that a Pod can mount">PVC</Term>. Not a StatefulSet.
+In [the persistent storage post](/blog/devops/7-persistent-storage-pvs-pvcs), Mini Order System's Postgres goes onto the cluster like this: a plain Deployment, `replicas: 1`, `strategy: Recreate`, one ordinary <Term term="PersistentVolumeClaim: a Kubernetes request for durable storage that a Pod can mount">PVC</Term>. Not a StatefulSet.
 
 Some people consider this heresy. Here's the actual reasoning.
 
@@ -143,10 +143,10 @@ Single replica: Deployment + Recreate, accept the downtime window. Real HA: oper
 
 ## The decision, compressed
 
-- **Replicas interchangeable?** Deployment. This is 90% of everything you'll deploy, including all of Relay's API tier.
+- **Replicas interchangeable?** Deployment. This is 90% of everything you'll deploy, including all of Mini Order System's API tier.
 - **Replicas need to find each other by name and keep per-replica data?** StatefulSet — but if it's a database, strongly consider an operator or managed service instead of raw YAML.
 - **Exactly one per node, because it services the node?** DaemonSet.
 - **Runs and finishes?** Job, or CronJob on a timer.
 - **Has state but only one replica?** Trick question — that's still a Deployment. State lives in the <a href="/blog/devops/7-persistent-storage-pvs-pvcs"><Term term="PersistentVolumeClaim: a Kubernetes request for durable storage that a Pod can mount">PVC</Term></a>, not the controller. Just use `Recreate`.
 
-Next up, we stop theorizing: [getting Kubernetes running locally](/blog/devops/4-kubernetes-running-locally), where the first Deployment of `relay-api` goes onto a real cluster and immediately greets me with `ImagePullBackOff`.
+Next up, we stop theorizing: [getting Kubernetes running locally](/blog/devops/4-kubernetes-running-locally), where the first Deployment of `mini-order-backend` goes onto a real cluster and immediately greets me with `ImagePullBackOff`.

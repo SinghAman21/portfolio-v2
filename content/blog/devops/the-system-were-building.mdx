@@ -16,7 +16,7 @@ This is the map. If you landed here from a later post wondering "wait, what app 
 
 ## The app we're building
 
-Meet **Relay** — a URL shortener with click analytics.
+Meet **Mini Order System** — a URL shortener with click analytics.
 
 I can hear the groan. A URL shortener is the todo app of backend engineering. But I picked it deliberately, because underneath the boring CRUD there's a traffic shape that exercises almost everything Kubernetes is actually for:
 
@@ -26,7 +26,7 @@ I can hear the groan. A URL shortener is the todo app of backend engineering. Bu
 
 Three endpoints. Two tables — `links (id, code, url, created_at)` and `clicks (id, link_id, ts, referrer)`. Small enough that the application code never gets in the way of the infrastructure lessons, real enough that the infrastructure lessons matter. When we load test in [the HPA post](/blog/devops/9-horizontal-pod-autoscaling), we're not scaling a hello-world — we're scaling something with a database behind it, and the database becomes the bottleneck the way it does in real systems.
 
-If the patterns work for Relay, they port to whatever you're running. The app is a vehicle. The traffic shape is the point.
+If the patterns work for Mini Order System, they port to whatever you're running. The app is a vehicle. The traffic shape is the point.
 
 ## The stack, and why each piece
 
@@ -42,11 +42,11 @@ Every decision up front, so no later post has to stop and justify itself.
 
 One honest caveat baked in from day one: we create the cluster with Traefik — k3s's bundled ingress controller — **disabled**. Not because Traefik is bad, but because [the ingress post](/blog/devops/11-ingress-routing-tls) uses ingress-nginx, the controller you're most likely to meet at work, and disabling Traefik up front saves rebuilding the cluster mid-series. [The local setup post](/blog/devops/4-kubernetes-running-locally) shows the exact command.
 
-**Images: a plain Dockerfile, loaded straight into the cluster.** The image is `node:22-alpine` based, tagged `relay-api:v1` and bumped (`:v2`, `:v3`...) whenever a post changes app code. We load it with `k3d image import` instead of pushing to a registry. This is a dev-only shortcut and I'll say so every time it appears — in production you push to a real registry and the cluster pulls from it. For a local learning loop, `k3d image import` removes an entire category of auth friction. (It also sets up the single most classic beginner failure, `ImagePullBackOff`, which we hit and debug for real in post 04.)
+**Images: a plain Dockerfile, loaded straight into the cluster.** The image is `node:22-alpine` based, tagged `mini-order-backend:v1` and bumped (`:v2`, `:v3`...) whenever a post changes app code. We load it with `k3d image import` instead of pushing to a registry. This is a dev-only shortcut and I'll say so every time it appears — in production you push to a real registry and the cluster pulls from it. For a local learning loop, `k3d image import` removes an entire category of auth friction. (It also sets up the single most classic beginner failure, `ImagePullBackOff`, which we hit and debug for real in post 04.)
 
 **Raw YAML, no Helm — at first.** Every manifest in this series is YAML you can read top to bottom. Helm and its templating solve a real problem, but reaching for it before you can write the underlying manifests by hand is how you end up able to install charts and unable to debug them. We hold the line until [the multi-environment post](/blog/devops/14-multi-environment-kustomize), where we adopt Kustomize — which is built into kubectl and patches plain YAML rather than templating it — and I make the case for why that's enough for a system this size. The one exception: installing third-party infrastructure like ingress-nginx and the logging stack, where Helm is simply how the ecosystem ships things and writing those manifests by hand teaches you nothing.
 
-**Everything in the `default` namespace — for now.** This is a genuine mistake I'm making on purpose, sort of. Namespaces show up conceptually in [post 02](/blog/devops/2-how-kubernetes-thinks), but we don't *use* them until [post 14](/blog/devops/14-multi-environment-kustomize) splits the system into `relay-dev`, `relay-staging`, and `relay-prod`. When we get to [the production readiness post](/blog/devops/16-production-readiness-checklist), "we ran in `default` for way too long" is on the list of things I'd do differently. You get to watch the mistake and the correction.
+**Everything in the `default` namespace — for now.** This is a genuine mistake I'm making on purpose, sort of. Namespaces show up conceptually in [post 02](/blog/devops/2-how-kubernetes-thinks), but we don't *use* them until [post 14](/blog/devops/14-multi-environment-kustomize) splits the system into `mini-order-dev`, `mini-order-staging`, and `mini-order-prod`. When we get to [the production readiness post](/blog/devops/16-production-readiness-checklist), "we ran in `default` for way too long" is on the list of things I'd do differently. You get to watch the mistake and the correction.
 
 **Load testing: `hey` for quick checks, `k6` when it matters.** You can't learn scaling behavior without generating load. `hey` is a one-liner for "throw 200 concurrent requests at this and tell me what happened." `k6` gives us scripted, ramped load for [the autoscaling post](/blog/devops/9-horizontal-pod-autoscaling), where we need to watch the HPA scale from 2 replicas to 10 and — the part nobody warns you about — watch how slowly it scales back down.
 
@@ -54,9 +54,9 @@ One honest caveat baked in from day one: we create the cluster with Traefik — 
 
 By the end, this is the system:
 
-- `relay-api` — a Deployment, 2–10 replicas under an HPA, resource requests and limits tuned from actual load-test data, liveness and readiness probes, behind a ClusterIP Service.
+- `mini-order-backend` — a Deployment, 2–10 replicas under an HPA, resource requests and limits tuned from actual load-test data, liveness and readiness probes, behind a ClusterIP Service.
 - `postgres` — single-replica Deployment, data on a PersistentVolumeClaim, connection details injected from a ConfigMap and a Secret.
-- An ingress-nginx controller terminating TLS for `relay.local`, routing into the Service.
+- An ingress-nginx controller terminating TLS for `mini-order.local`, routing into the Service.
 - Loki, Alloy, and Grafana collecting structured JSON logs from everything.
 - A `postgres-backup` CronJob running `pg_dump` on a schedule — with a restore procedure we've proven works by nuking the environment and bringing it back.
 - Three environments built from one Kustomize base.
