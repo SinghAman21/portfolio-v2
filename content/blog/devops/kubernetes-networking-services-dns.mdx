@@ -1,0 +1,173 @@
+---
+title: "5. Networking in Kubernetes: Services, DNS, and Why It's Not Just TCP/IP"
+publishDate: "11 August 2026"
+slug: "devops/5-kubernetes-networking-services-dns"
+description: "The mental model for Kubernetes networking: Pod IPs are cattle, Services are stable virtual IPs that don't actually exist, and DNS is how anything finds anything. Plus the selector typo that silently breaks everything."
+tags: ["kubernetes", "devops", "networking", "services", "dns", "reference", "series"]
+---
+
+Here's the question that broke my brain when I started: if every pod gets its own IP address, and pods get deleted and recreated constantly, how does anything ever *connect* to anything?
+
+I had [Mini Order System deployed](/blog/devops/4-kubernetes-running-locally) and I could `kubectl port-forward` to it, which felt like cheating because it was. The moment I needed the API pods to talk to Postgres — a pod whose IP changes every time it restarts — I had to actually understand this. The official docs explain Services in terms of what fields to set. They barely explain what a Service *is*, and what it is turns out to be genuinely weird.
+
+So this is the post I wish I'd read first. It's the one the rest of the series leans on.
+
+## Start here: Pod IPs are real, and they're disposable
+
+Two facts, and everything else follows from them.
+
+**Fact one: every pod gets its own real, routable IP address.** Not a port mapping on the node. Not NAT between pods. Pod A can open a TCP connection straight to Pod B's IP, even across nodes, and it just works. This is the Kubernetes network model, and every cluster network plugin (k3d's flannel included) is required to deliver it. Inside the cluster, it really is just TCP/IP.
+
+**Fact two: that IP is worthless to remember.** Pods are cattle. When a pod is rescheduled, crashes, or gets replaced by a [rolling update](/blog/devops/6-multi-replica-scaling), the new pod gets a *new* IP. There is no mechanism for a pod to keep its address, on purpose.
+
+Watch it happen. List the pod with its IP, delete it, and list again:
+
+```bash
+kubectl get pods -o wide
+kubectl delete pod mini-order-backend-7d9c6bf6b4-x2jlp
+kubectl get pods -o wide
+```
+
+```text
+NAME                         READY   STATUS    IP           NODE
+mini-order-backend-7d9c6bf6b4-x2jlp   1/1     Running   10.42.1.14   k3d-mini-order-agent-0
+
+pod "mini-order-backend-7d9c6bf6b4-x2jlp" deleted
+
+NAME                         READY   STATUS    IP           NODE
+mini-order-backend-7d9c6bf6b4-kq8wn   1/1     Running   10.42.0.22   k3d-mini-order-server-0
+```
+
+Same app. Different pod, different IP, different node. If Postgres's connection string pointed at `10.42.1.14`, Mini Order System is now down.
+
+So the problem statement is: we need a stable address for a set of unstable pods. That's what a Service is. That's *all* a Service is.
+
+## The Service: a stable IP that doesn't exist
+
+Here's the Service in front of Mini Order System's API pods — this is the real file from the Mini Order System repo, and you can apply it as-is:
+
+```yaml
+# k8s/mini-order-backend-service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: mini-order-backend
+spec:
+  selector:
+    app: mini-order-backend
+  ports:
+    - port: 80
+      targetPort: 3000
+```
+
+Apply it and Kubernetes assigns it a **ClusterIP** — a virtual IP that will never change for the life of the Service:
+
+```bash
+kubectl apply -f k8s/mini-order-backend-service.yaml
+kubectl get svc mini-order-backend
+```
+
+```text
+NAME        TYPE        CLUSTER-IP     EXTERNAL-IP   PORT(S)   AGE
+mini-order-backend   ClusterIP   10.43.87.201   <none>        80/TCP    12s
+```
+
+Now the part that took me embarrassingly long to accept: **10.43.87.201 is not a real address.** No pod has it. No node has it. No network interface anywhere in the cluster has this IP bound to it. You cannot ping it (more on that below). It exists only as an entry in iptables rules.
+
+Here's what actually happens. A component called **kube-proxy** runs on every node (in k3s it's built into the main binary, but it's there). It watches the API server for Services and programs the node's packet-filtering rules — iptables by default, IPVS on bigger clusters — so that any packet leaving any pod with destination `10.43.87.201:80` gets its destination address *rewritten in flight* to one of the real pod IPs, picked roughly at random.
+
+The ClusterIP is a rendezvous point that exists purely as a rewrite rule. The connection never terminates at the Service, because there's nothing there to terminate at. Once I got that, three confusing behaviors became obvious:
+
+- **Load balancing is per-connection, not per-request.** The destination is picked when the TCP connection is opened. A long-lived connection (like Mini Order System's Postgres pool) sticks to one pod for its entire life. If you scale up, existing connections don't rebalance.
+- **There's no Service "process" to be slow or crash.** People ask how to monitor a Service's health. You can't; it's a routing rule. You monitor the pods behind it.
+- **The Service adds essentially zero latency.** It's a destination-NAT rule in the kernel, not a proxy hop.
+
+## EndpointSlices: how the Service knows where to send traffic
+
+The Service selects pods with its `selector` — every pod labeled `app: mini-order-backend` is a target. But the Service object itself doesn't store the pod list. A controller continuously writes the current set of matching, *ready* pod IPs into **EndpointSlice** objects. Look at yours:
+
+```bash
+kubectl get endpointslices -l kubernetes.io/service-name=mini-order-backend
+```
+
+```text
+NAME              ADDRESSTYPE   PORTS   ENDPOINTS                            AGE
+mini-order-backend-fkg8x   IPv4          3000    10.42.0.22,10.42.1.31   4d
+```
+
+This is the live answer to "where will my traffic actually go," and it's the single most useful debugging object in Kubernetes networking. Burn this into your habits, because of the trap below.
+
+Two things control membership in that list:
+
+1. **Labels.** The pod's labels match the Service's selector. That's it — no registration step, no service discovery agent in the pod.
+2. **Readiness.** A pod that fails its readiness probe is pulled *out* of the EndpointSlice without being killed. This is the mechanism that makes zero-downtime rollouts work, and it's covered properly in [the health checks post](/blog/devops/12-health-checks-probes).
+
+### The trap that will get you: selector typos fail silently
+
+This one cost me forty minutes. I had `app: mini-order-backend` on the Service and `app: mini-order-app` on the pods — one word off. Everything *applies* cleanly. `kubectl get svc` looks perfect. `kubectl get pods` looks perfect. But every request to the Service hangs and eventually dies with:
+
+```text
+curl: (7) Failed to connect to mini-order-backend port 80 after 130 ms: Connection refused
+```
+
+Kubernetes does not warn you that a Service selects zero pods. It's not an error state — maybe you *meant* to create the Service before the pods, which is a totally normal thing to do. The check is one command:
+
+```bash
+kubectl get endpointslices -l kubernetes.io/service-name=mini-order-backend
+```
+
+```text
+NAME              ADDRESSTYPE   PORTS     ENDPOINTS   AGE
+mini-order-backend-fkg8x   IPv4          <unset>   <unset>     2m
+```
+
+Empty endpoints. Service exists, routes to nowhere. Whenever a Service "doesn't work," check the EndpointSlice *first*, before you look at anything else. Empty list → label/selector mismatch or no pod is ready. Populated list → the Service is fine and your problem is the app.
+
+### The other trap: you can't ping a ClusterIP
+
+Early on I tried to "check if the Service was up" with ping, got 100% packet loss, and assumed the network was broken. It wasn't. Ping is ICMP; the kube-proxy rules only rewrite traffic to the Service's declared TCP/UDP ports. ICMP to a virtual IP that no interface owns just vanishes. This is fine and normal. Test Services with an actual connection to an actual port:
+
+```bash
+kubectl run tmp --rm -it --image=busybox:1.36 --restart=Never -- \
+  wget -qO- http://mini-order-backend/healthz
+```
+
+## DNS: how anything finds the Service
+
+A stable IP nobody can predict at deploy time is only half a solution. The other half is **CoreDNS**, a DNS server running inside the cluster (you can see it in `kube-system`). Every Service automatically gets a DNS record:
+
+```text
+<service>.<namespace>.svc.cluster.local
+```
+
+So Mini Order System's database is reachable at `postgres.default.svc.cluster.local`. And because every pod's `/etc/resolv.conf` is configured with search domains for its own namespace, a pod in `default` can use progressively shorter names — `postgres.default`, or just `postgres`.
+
+This is why Mini Order System's connection string is simply:
+
+```text
+postgres://mini-order:<password>@postgres:5432/mini-order
+```
+
+No IP addresses anywhere. The name `postgres` resolves to the Service's ClusterIP (which never changes), and kube-proxy rewrites the connection to whatever pod is currently behind it. Pod dies, comes back with a new IP, EndpointSlice updates, nobody upstream notices or cares. That's the whole machine: **DNS gives you a stable name, the Service gives you a stable IP, EndpointSlices track the unstable reality underneath.**
+
+One opinion: always write the short name (`postgres`) in app config, not the fully-qualified one. If you ever split environments by namespace — which we do in [the multi-environment post](/blog/devops/14-multi-environment-kustomize) — the short name automatically resolves to *that namespace's* database. Same config, every environment. Hardcode `postgres.default.svc.cluster.local` and you've pinned every environment to one namespace.
+
+The search-domain behavior has a real cost worth knowing: a lookup for an *external* name like `api.stripe.com` gets tried as `api.stripe.com.default.svc.cluster.local`, then `.svc.cluster.local`, then `.cluster.local` before the real query, because of the `ndots:5` default. That's a few wasted queries per lookup. At Mini Order System's scale, irrelevant. At thousands of requests per second doing fresh DNS lookups, it shows up in latency graphs. Filing that under "problems I'd be lucky to have."
+
+## ClusterIP, NodePort, LoadBalancer: one ladder, not three features
+
+Service `type` confused me because the docs present three types as peers. They're not — each one is the previous one plus more exposure:
+
+- **ClusterIP** (default): virtual IP reachable only inside the cluster. This is the right type for almost everything. Mini Order System's API and Postgres are both ClusterIP — Postgres especially should never be anything else.
+- **NodePort**: a ClusterIP, *plus* a port (30000–32767) opened on every node that forwards to it. Now anything that can reach a node's real IP can reach the Service. Ugly ports, no load balancing across nodes, but zero external dependencies. Useful for a quick poke in dev; I wouldn't run anything real on it.
+- **LoadBalancer**: a NodePort, *plus* a request to the environment for an external load balancer pointing at those node ports. On AWS/GCP that provisions a cloud LB with a real public IP. On bare metal it does nothing without extra software — the request sits `<pending>` forever. k3d ships a tiny built-in LB, which is why we mapped `--port "8080:80@loadbalancer"` when [creating the cluster](/blog/devops/4-kubernetes-running-locally).
+
+The instinct is to give every public-facing app its own LoadBalancer. Resist it — in a cloud, each one is a billable load balancer, and it's all L4 anyway: no hostnames, no paths, no TLS termination. The actual front door for HTTP traffic is **Ingress**: one load balancer, one entry point, routing by host and path with TLS handled centrally. That's a post of its own — [Ingress: routing traffic from the internet to your services](/blog/devops/11-ingress-routing-tls) — so I'll leave it at the pointer.
+
+## The model in one paragraph
+
+Pods have real IPs you must never depend on. A Service is a stable virtual IP that exists only as kernel rewrite rules maintained by kube-proxy, targeting the ready pods listed in its EndpointSlices, membership driven entirely by labels and readiness. CoreDNS names every Service so nothing ever holds an IP. `type` is a ladder of exposure — ClusterIP inside, NodePort cracks the door, LoadBalancer asks the environment for a real front door — and HTTP routing beyond that is Ingress's job.
+
+When something can't reach something, the debugging order is always the same: does the DNS name resolve → does the EndpointSlice have addresses → is the app on the other end actually listening on `targetPort`. In my experience it's the EndpointSlice, and it's a label typo.
+
+Next up in the build: [multi-replica scaling and load balancing](/blog/devops/6-multi-replica-scaling), where the Service finally gets more than one pod to spread traffic across — and where keeping a click counter in process memory stops being a cute shortcut and starts being a bug.
