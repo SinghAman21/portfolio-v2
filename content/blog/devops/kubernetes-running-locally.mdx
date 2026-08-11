@@ -1,0 +1,347 @@
+---
+title: "4. Getting Kubernetes Running Locally (and Actually Understanding What You Built)"
+publishDate: "22 May 2026"
+slug: "devops/4-kubernetes-running-locally"
+description: "First deploy of the series: a k3d cluster, the Mini Order System API in a container, one Deployment, one Service, and the ImagePullBackOff that eats every beginner's first afternoon."
+tags: ["kubernetes", "devops", "k3d", "deployments", "local-development", "series"]
+---
+
+Time to stop reading and start shipping. Posts [one](/blog/devops/1-the-system-were-building) through [three](/blog/devops/3-deployments-statefulsets-daemonsets) were the map; this is the first mile of actual road. By the end of this post, the Mini Order System API is running inside a real Kubernetes cluster on my laptop, and I can curl it.
+
+The goal sounds trivial — "run a container in Kubernetes" — but this post is where the abstract stuff from [How Kubernetes Actually Thinks About Things](/blog/devops/2-how-kubernetes-thinks) becomes muscle memory. It's also where I hit my first genuinely confusing failure, stared at `ImagePullBackOff` for twenty minutes, and learned something about how local clusters actually work that no tutorial had bothered to tell me.
+
+## The goal
+
+Get a Kubernetes cluster running locally, containerize Mini Order System, and deploy it as a proper Deployment with a Service in front of it. Not `docker run`. Not docker-compose. The real thing, so that everything we build in the next twelve posts sits on the same foundation we'd use in production.
+
+Starting state: Mini Order System exists as a Node app on my machine, talking to a Postgres I run in Docker. Ending state: Mini Order System runs inside the cluster, managed by a Deployment, reachable through a Service.
+
+## Why k3d (the two-minute version)
+
+Three serious options for local Kubernetes: minikube, kind, and k3d. I tried all three and settled on k3d, and I'll give you the honest reasoning rather than a feature matrix.
+
+**minikube** is the classic. It's fine. It historically ran a VM, now has a Docker driver, and carries a decade of accumulated flags and drivers. It felt heavier than I wanted for something I'd be creating and destroying constantly.
+
+**kind** (Kubernetes-in-Docker) is what the Kubernetes project itself uses for CI. It's excellent and if you already use it, nothing in this series will fight you.
+
+**k3d** runs [k3s](https://k3s.io) — Rancher's lightweight but fully conformant Kubernetes distribution — inside Docker containers. Two things sold me:
+
+1. **It ships batteries.** k3s bundles a metrics-server (which means [Horizontal Pod Autoscaling](/blog/devops/9-horizontal-pod-autoscaling) works out of the box later) and a default StorageClass called `local-path` (which [the storage post](/blog/devops/7-persistent-storage-pvs-pvcs) leans on). With kind, both are extra setup.
+2. **It has a built-in load balancer.** k3d runs a tiny nginx proxy in front of the cluster and lets you map host ports into it at creation time. When we get to [Ingress](/blog/devops/11-ingress-routing-tls), traffic from my browser to the cluster Just Works without `kubectl port-forward` gymnastics.
+
+Not a religious position. If you're on kind, translate as you go; 95% of this series is plain Kubernetes YAML that doesn't care.
+
+Install is one command (see [k3d.io](https://k3d.io) for your platform; I used the install script). You also need `kubectl` and Docker running.
+
+## Creating the cluster
+
+Here's the exact command, and it deserves a line-by-line because two of these flags are decisions with consequences:
+
+```bash
+k3d cluster create mini-order \
+  --port "8080:80@loadbalancer" \
+  --agents 2 \
+  --k3s-arg "--disable=traefik@server:0"
+```
+
+- `--port "8080:80@loadbalancer"` — maps port 8080 on my laptop to port 80 on k3d's built-in load balancer. Nothing uses this *yet*. It becomes the front door in [the Ingress post](/blog/devops/11-ingress-routing-tls), and I'm mapping it now because adding a port mapping later means recreating the cluster. Ask me how I know.
+- `--agents 2` — one server node (control plane) plus two agent nodes (workers). Could I run everything on one node? Sure. But then scheduling is fake — every pod lands on the only node and I'd never see the scheduler actually make a choice. Three nodes on a laptop costs almost nothing with k3s, and it makes [the multi-replica post](/blog/devops/6-multi-replica-scaling) honest.
+- `--k3s-arg "--disable=traefik@server:0"` — k3s bundles Traefik as its default ingress controller. I'm disabling it *now* because in post 11 we install ingress-nginx instead — it's what I keep meeting in real clusters at work, and I'd rather learn the thing I'll actually encounter. Disabling Traefik at creation time beats fighting two ingress controllers for port 80 later. If you skip this flag today, nothing breaks until post 11, and then something absolutely will.
+
+Thirty seconds later, check what you got:
+
+```bash
+kubectl get nodes
+```
+
+```text
+NAME                 STATUS   ROLES                  AGE   VERSION
+k3d-mini-order-server-0   Ready    control-plane,master   40s   v1.31.5+k3s1
+k3d-mini-order-agent-0    Ready    <none>                 36s   v1.31.5+k3s1
+k3d-mini-order-agent-1    Ready    <none>                 36s   v1.31.5+k3s1
+```
+
+Three "machines," all Docker containers, all pretending very convincingly to be a cluster. `k3d cluster create` also wrote itself into my kubeconfig, so `kubectl` already points at it.
+
+## Containerizing Mini Order System
+
+The app, if you skipped [post 1](/blog/devops/1-the-system-were-building): a URL shortener with click analytics. Three routes and a hot path. Here's `server.js`, complete — real code, not pseudocode. (Building along from scratch? `npm init -y && npm install express pg` first, so the `package*.json` files the Dockerfile copies actually exist.)
+
+```js
+// server.js
+const express = require("express");
+const { Pool } = require("pg");
+const crypto = require("crypto");
+
+const app = express();
+app.use(express.json());
+
+const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+
+// create a short link
+app.post("/links", async (req, res) => {
+  const code = crypto.randomBytes(4).toString("base64url");
+  await pool.query(
+    "INSERT INTO links (code, url) VALUES ($1, $2)",
+    [code, req.body.url]
+  );
+  res.status(201).json({ code });
+});
+
+// stats for a link
+app.get("/links/:code/stats", async (req, res) => {
+  const { rows } = await pool.query(
+    `SELECT l.code, l.url, COUNT(c.id)::int AS clicks
+     FROM links l LEFT JOIN clicks c ON c.link_id = l.id
+     WHERE l.code = $1 GROUP BY l.id`,
+    [req.params.code]
+  );
+  if (!rows.length) return res.status(404).end();
+  res.json(rows[0]);
+});
+
+// the hot path: redirect + record the click
+app.get("/:code", async (req, res) => {
+  const { rows } = await pool.query(
+    "SELECT id, url FROM links WHERE code = $1",
+    [req.params.code]
+  );
+  if (!rows.length) return res.status(404).end();
+  await pool.query(
+    "INSERT INTO clicks (link_id, referrer) VALUES ($1, $2)",
+    [rows[0].id, req.get("referer") || null]
+  );
+  res.redirect(302, rows[0].url);
+});
+
+app.listen(3000, () => console.log("mini-order listening on 3000"));
+```
+
+The Dockerfile is deliberately boring:
+
+```dockerfile
+# Dockerfile
+FROM node:22-alpine
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci --omit=dev
+COPY . .
+EXPOSE 3000
+CMD ["node", "server.js"]
+```
+
+No multi-stage build, no distroless base, no non-root user yet. All of that matters and all of it is noise for today's goal. Build it:
+
+```bash
+docker build -t mini-order-backend:v1 .
+```
+
+That `:v1` tag is a series convention — every time a post changes app code, the tag bumps. `latest` in Kubernetes is a trap I'll explain when it bites.
+
+## One decision I'm deferring: the database stays outside
+
+Postgres is *not* going into the cluster today. Databases in Kubernetes deserve their own post ([they get one](/blog/devops/7-persistent-storage-pvs-pvcs)), because doing it carelessly is how data evaporates. For now Postgres keeps running where it already runs — a plain Docker container on my host:
+
+```bash
+docker run -d --name mini-order-pg -p 5432:5432 \
+  -e POSTGRES_PASSWORD=mini-orderdev -e POSTGRES_DB=mini-order postgres:16
+```
+
+Mini Order System expects two tables, and nothing creates them automatically — that's a migration-tooling conversation this series is deliberately not having. Save this as `schema.sql`:
+
+```sql
+-- schema.sql
+CREATE TABLE IF NOT EXISTS links (
+  id         SERIAL PRIMARY KEY,
+  code       TEXT UNIQUE NOT NULL,
+  url        TEXT NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS clicks (
+  id       SERIAL PRIMARY KEY,
+  link_id  INTEGER NOT NULL REFERENCES links(id),
+  ts       TIMESTAMPTZ NOT NULL DEFAULT now(),
+  referrer TEXT
+);
+```
+
+And load it into the running container:
+
+```bash
+docker exec -i mini-order-pg psql -U postgres -d mini-order < schema.sql
+```
+
+Which raises a genuinely non-obvious question: how does a pod *inside* the cluster reach a Postgres on my *laptop*? "localhost" inside a pod is the pod. k3d's answer is a magic hostname, `host.k3d.internal`, which resolves from inside the cluster to the host machine. So the connection string becomes:
+
+```text
+postgres://postgres:mini-orderdev@host.k3d.internal:5432/mini-order
+```
+
+This is scaffolding, and dev-only scaffolding at that — it's k3d-specific and it's a database with no place in our declarative config. It gets demolished in post 7. Flagging it so you know it's a shortcut, not a pattern.
+
+## The Deployment and Service
+
+Per [post 3](/blog/devops/3-deployments-statefulsets-daemonsets): a stateless API means a Deployment, no debate. Manifests live in a `k8s/` directory in the repo — a series convention worth copying, because "where's the YAML" stops being a question. Here's `k8s/mini-order-backend.yaml`, both objects in one file separated by `---`:
+
+```yaml
+# k8s/mini-order-backend.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mini-order-backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mini-order-backend
+  template:
+    metadata:
+      labels:
+        app: mini-order-backend
+    spec:
+      containers:
+        - name: mini-order-backend
+          image: mini-order-backend:v1
+          ports:
+            - containerPort: 3000
+          env:
+            - name: DATABASE_URL
+              value: "postgres://postgres:mini-orderdev@host.k3d.internal:5432/mini-order"
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mini-order-backend
+spec:
+  selector:
+    app: mini-order-backend
+  ports:
+    - port: 80
+      targetPort: 3000
+```
+
+Three things I want to react to, because I typed each of them wrong at least once:
+
+**The selector appears twice and must agree with itself.** `spec.selector.matchLabels` on the Deployment and the labels in `spec.template.metadata.labels` have to match — that's literally how the Deployment knows which pods are "its" pods. The Service has its *own* selector doing the same trick independently. Mismatch the Service selector and everything deploys green while the Service quietly routes to nothing. No error. Just silence. We'll dig into why in [the networking post](/blog/devops/5-kubernetes-networking-services-dns).
+
+**Hardcoding `DATABASE_URL` in the manifest is bad and I'm doing it anyway.** Credentials in YAML that's headed for git. It's wrong, I know it's wrong, and [post 8](/blog/devops/8-configmaps-and-secrets) exists to fix it properly. One sin at a time.
+
+**The resource request is a guess.** 100m CPU, 128Mi memory — numbers I made up. They matter enormously later (they're what the scheduler *and* the autoscaler reason about) and [post 10](/blog/devops/10-resource-requests-and-limits) replaces guessing with measurement.
+
+Apply it:
+
+```bash
+kubectl apply -f k8s/mini-order-backend.yaml
+```
+
+## Where it broke: ImagePullBackOff
+
+And immediately:
+
+```bash
+kubectl get pods
+```
+
+```text
+NAME                         READY   STATUS             RESTARTS   AGE
+mini-order-backend-7d9c6b58f4-mkx2p   0/1     ImagePullBackOff   0          45s
+```
+
+First instinct: typo in the image name. Nope. Second instinct, and the right habit to build: **`kubectl describe` the pod and read the Events section.** It's the single most useful debugging move in Kubernetes.
+
+```bash
+kubectl describe pod mini-order-backend-7d9c6b58f4-mkx2p
+...
+Events:
+  Type     Reason     Age                 From               Message
+  ----     ------     ----                ----               -------
+  Normal   Scheduled  2m                  default-scheduler  Successfully assigned default/mini-order-backend-7d9c6b58f4-mkx2p to k3d-mini-order-agent-1
+  Normal   Pulling    45s (x3 over 2m)    kubelet            Pulling image "mini-order-backend:v1"
+  Warning  Failed     42s (x3 over 2m)    kubelet            Failed to pull image "mini-order-backend:v1": failed to resolve reference "docker.io/library/mini-order-backend:v1": pull access denied, repository does not exist or may require authorization
+  Warning  Failed     42s (x3 over 2m)    kubelet            Error: ErrImagePull
+  Normal   BackOff    15s (x4 over 105s)  kubelet            Back-off pulling image "mini-order-backend:v1"
+  Warning  Failed     15s (x4 over 105s)  kubelet            Error: ImagePullBackOff
+```
+
+Read the message carefully: `docker.io/library/mini-order-backend:v1`. The cluster went to **Docker Hub** looking for my image. Of course it's not there.
+
+Here's the mental model I was missing. `docker build` put the image in my *host's* Docker daemon. But the cluster nodes are their own machines (containers, but conceptually machines) with their own separate image stores. When the kubelet on `k3d-mini-order-agent-1` needed `mini-order-backend:v1`, it checked its local store, found nothing, and did the only other thing it knows: ask a registry. An image name with no registry prefix defaults to Docker Hub. My laptop's Docker images might as well be on a different continent.
+
+In production this never comes up — you push to a registry and nodes pull from it. Locally, k3d gives you a shortcut that copies an image from your Docker daemon into every node's store:
+
+```bash
+k3d image import mini-order-backend:v1 -c mini-order
+```
+
+Delete the pod so the Deployment replaces it and retries immediately (the controller doing its job, exactly as [post 2](/blog/devops/2-how-kubernetes-thinks) promised):
+
+```bash
+kubectl delete pod mini-order-backend-7d9c6b58f4-mkx2p
+kubectl get pods
+NAME                         READY   STATUS    RESTARTS   AGE
+mini-order-backend-7d9c6b58f4-x8vqn   1/1     Running   0          8s
+```
+
+Twenty minutes of my life, one permanent lesson: **the cluster cannot see your laptop's images.** Every time we bump the tag in future posts, `k3d image import` rides along. The grown-up fix is a real registry — that's how it works everywhere that matters, and it arrives with the CI/CD conversation. Flagged as a corner, cut deliberately.
+
+## Actually hitting it
+
+The Service is `ClusterIP` — a stable virtual IP that only exists *inside* the cluster ([post 5](/blog/devops/5-kubernetes-networking-services-dns) explains what that IP even is, because it's weirder than it looks). To reach it from my laptop today, `kubectl port-forward`:
+
+```bash
+kubectl port-forward svc/mini-order-backend 3000:80
+```
+
+Then, from another terminal — create a link, follow it, check the stats:
+
+```bash
+curl -s -X POST localhost:3000/links \
+    -H 'content-type: application/json' \
+    -d '{"url":"https://k3d.io"}'
+{"code":"pXm4Qz0A"}
+
+curl -si localhost:3000/pXm4Qz0A | head -2
+HTTP/1.1 302 Found
+Location: https://k3d.io
+
+curl -s localhost:3000/links/pXm4Qz0A/stats
+{"code":"pXm4Qz0A","url":"https://k3d.io","clicks":1}
+```
+
+A request left my terminal, entered a port-forward tunnel into the cluster, hit a Service, landed on a pod on one of three nodes, queried a database back out on my host, and came home. That's the whole pipeline, working.
+
+One more test, because seeing it once made Kubernetes click harder than any diagram. Kill the pod on purpose:
+
+```bash
+kubectl delete pod mini-order-backend-7d9c6b58f4-x8vqn
+pod "mini-order-backend-7d9c6b58f4-x8vqn" deleted
+
+kubectl get pods
+NAME                         READY   STATUS    RESTARTS   AGE
+mini-order-backend-7d9c6b58f4-b2ndw   1/1     Running   0          4s
+```
+
+Four seconds. I didn't restart anything — the Deployment noticed actual state (0 pods) disagreed with desired state (1 pod) and reconciled. Declarative state isn't a slogan; it's a robot that fixes your stuff while you watch.
+
+(Note: `kubectl port-forward` targets one specific pod under the hood, so killing the pod drops the tunnel — restart the port-forward after this experiment. One more reason it's a dev tool, not a front door.)
+
+## What still doesn't work
+
+Plenty, and I want to be precise about it:
+
+- **One replica.** Kill the pod and there are four seconds of downtime. Kubernetes' whole pitch is avoiding that, and we haven't cashed it in yet.
+- **The database lives outside the cluster**, reachable only through a k3d-specific hostname. Unmanaged, undeclared, unportable.
+- **Credentials are hardcoded in a YAML file.** In git. Genuinely bad.
+- **No health checks.** If Mini Order System wedges without crashing, Kubernetes will happily keep sending it nothing forever — actually worse, it can't send it anything anyway without a probe telling it what "ready" means. [Post 12's problem](/blog/devops/12-health-checks-probes).
+- **`kubectl port-forward` is the only way in.** Fine for me, useless for users.
+
+Every one of these has a post with its name on it. That's the point of the series — this isn't a broken system, it's a system with a known and ordered TODO list.
+
+## Next up
+
+Before we scale Mini Order System to multiple replicas, we need to actually understand what that Service object did — because "a stable IP in front of pods" hides some genuinely strange machinery involving virtual IPs that no network interface owns, iptables rules, and a DNS server running inside the cluster. That's [Networking in Kubernetes: Services, DNS, and why it's not just TCP/IP](/blog/devops/5-kubernetes-networking-services-dns). Then we crank `replicas` up and [break things on purpose](/blog/devops/6-multi-replica-scaling).
