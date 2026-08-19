@@ -1,0 +1,275 @@
+---
+title: "6. Multi-Replica Scaling and Load Balancing: Three Copies of Mini Order System, One Broken Cache"
+publishDate: "20 August 2026"
+slug: "devops/6-multi-replica-scaling"
+description: "Scaling Mini Order System from one pod to three: rolling updates, killing pods on purpose, discovering that port-forward doesn't load-balance, and the in-memory cache that quietly returned stale order data the moment a second replica existed."
+tags: ["kubernetes", "devops", "deployments", "scaling", "rolling-updates", "series"]
+---
+
+At the end of [the last post](/blog/devops/4-kubernetes-running-locally), Mini Order System was running in the cluster. One pod. One copy of the API, and if that copy dies, Mini Order System is down until the Deployment replaces it — which it does, but replacement takes seconds, and during those seconds order reads and writes fail at the infrastructure level.
+
+One replica is also a ceiling. Mini Order System's busy path is the order API — `GET /orders` and `GET /orders/:id` for reads, with `POST /orders` for writes — and a single Node process on a single pod tops out wherever that one event loop tops out. I want more copies. More copies means load balancing, and load balancing means I'm about to find out whether Mini Order System is actually stateless or whether I just assumed it was.
+
+Spoiler: I assumed. It wasn't. There's a bug in this post that I shipped, and I want to walk you into it the same way I walked into it.
+
+## What breaks with one replica
+
+Two separate problems, and it's worth keeping them apart.
+
+**Availability.** Kill the pod and there's a gap. The Deployment notices and starts a replacement, but a container pull-and-start isn't instant. With one replica, any pod death — a crash, a node problem, *a deploy* — is downtime. That last one stings: with a single replica, even a routine rolling update has a moment where the old pod is terminating and the new one isn't ready.
+
+**Throughput.** Node handles concurrent I/O well, but it's still one process with one CPU's worth of event loop. When I pointed `hey` at `GET /orders` later in this post, a single pod plateaued and latency climbed. There's no fixing that by tuning; you fix it by running more of them.
+
+Kubernetes makes the second copy almost embarrassingly cheap. That's the whole pitch. The catch is that everything about your app that silently depended on "there is exactly one of me" breaks at the same instant.
+
+## The concept: you don't scale pods, you scale a template
+
+Back in [How Kubernetes Actually Thinks About Things](/blog/devops/2-how-kubernetes-thinks), the core idea was declarative state: you describe what you want, controllers make it true. Replicas are the purest version of that.
+
+A Deployment doesn't manage pods directly. It manages a **ReplicaSet**, and the ReplicaSet's entire job is a counting loop: *desired replicas* minus *actual matching pods*, act on the difference. Too few, create pods from the template. Too many, delete some. That's it. That's the whole controller.
+
+This is why scaling is a one-line change. You're not saying "start two more servers" — you're editing a number in a spec, and a loop that runs forever notices the number no longer matches reality.
+
+The layering matters for updates too. When you change the pod template (say, a new image), the Deployment doesn't mutate the existing ReplicaSet. It creates a *new* ReplicaSet with the new template and turns two dials in opposite directions: new one up, old one down. That choreography is a rolling update, and the Deployment keeps the old ReplicaSets around at zero replicas, which is what makes `kubectl rollout undo` possible — rollback is just turning the dials back.
+
+The pods themselves are interchangeable. No names, no identity, no "pod 1 is special." If that sentence made you nervous about your database, good instinct — that's exactly the [Deployments vs StatefulSets](/blog/devops/3-deployments-statefulsets-daemonsets) distinction, and it's why Postgres isn't getting this treatment.
+
+## Scaling to three
+
+The change to `mini-order-backend`'s Deployment is genuinely one line — here's the full manifest so you can paste it whole:
+
+```yaml
+# k8s/mini-order-backend-deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mini-order-backend
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: mini-order-backend
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  template:
+    metadata:
+      labels:
+        app: mini-order-backend
+    spec:
+      containers:
+        - name: mini-order-backend
+          image: mini-order-backend:v1
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 3000
+```
+
+The `strategy` block is new too, and I'll come back to it. Apply and watch:
+
+```bash
+kubectl apply -f k8s/mini-order-backend-deployment.yaml
+kubectl get pods -w
+```
+
+```text
+NAME                         READY   STATUS              RESTARTS   AGE
+mini-order-backend-7d9c6b8f4d-x2jlp   1/1     Running             0          2d
+mini-order-backend-7d9c6b8f4d-mq8rn   0/1     ContainerCreating   0          2s
+mini-order-backend-7d9c6b8f4d-t6wzk   0/1     ContainerCreating   0          2s
+mini-order-backend-7d9c6b8f4d-mq8rn   1/1     Running             0          4s
+mini-order-backend-7d9c6b8f4d-t6wzk   1/1     Running             0          5s
+```
+
+Five seconds. The original pod doesn't blink — same hash in the name, because the template didn't change, so it's the same ReplicaSet just counting to three now.
+
+Note where they landed:
+
+```bash
+kubectl get pods -o wide
+```
+
+```text
+NAME                         READY   STATUS    NODE
+mini-order-backend-7d9c6b8f4d-x2jlp   1/1     Running   k3d-mini-order-agent-0
+mini-order-backend-7d9c6b8f4d-mq8rn   1/1     Running   k3d-mini-order-agent-1
+mini-order-backend-7d9c6b8f4d-t6wzk   1/1     Running   k3d-mini-order-agent-0
+```
+
+The scheduler spread them across both agent nodes without being asked. Two pods share a node, which on a two-node cluster is unavoidable — worth remembering that "three replicas" is not automatically "three failure domains."
+
+About that strategy block: `maxSurge: 1, maxUnavailable: 0` means "during an update, you may create one extra pod above the desired count, but you may never have fewer ready pods than desired." The defaults are 25%/25%, which for three replicas rounds to allowing one pod down during a rollout. I'd rather pay for a temporary fourth pod than serve with two. On a laptop cluster this is aesthetic; in production it's the difference between a deploy being invisible and a deploy being a latency blip.
+
+## Killing pods for fun
+
+The claim is that the ReplicaSet heals. Verify it — this is the single most convincing demo in Kubernetes:
+
+```bash
+kubectl delete pod mini-order-backend-7d9c6b8f4d-mq8rn
+```
+
+In a second terminal, `kubectl get pods -w`:
+
+```text
+NAME                         READY   STATUS              RESTARTS   AGE
+mini-order-backend-7d9c6b8f4d-mq8rn   1/1     Terminating         0          9m
+mini-order-backend-7d9c6b8f4d-hv4qs   0/1     Pending             0          0s
+mini-order-backend-7d9c6b8f4d-hv4qs   0/1     ContainerCreating   0          0s
+mini-order-backend-7d9c6b8f4d-hv4qs   1/1     Running             0          3s
+mini-order-backend-7d9c6b8f4d-mq8rn   0/1     Completed           0          9m
+```
+
+The replacement (`hv4qs`) starts before the old pod finishes terminating. I deleted a pod and the system's response was to make my deletion irrelevant within three seconds. You cannot scale pods down by deleting them — the counting loop just wins. The number in the spec is the only thing that's real.
+
+Meanwhile, requests kept working, because the other two replicas were serving. Which brings up: serving *how*, exactly?
+
+## The port-forward lie
+
+Here's where I embarrassed myself. I wanted to see load balancing, so I did what I'd been doing all along:
+
+```bash
+kubectl port-forward svc/mini-order-backend 8080:80
+```
+
+I'd added a debug header to Mini Order System so I could see which pod answered — this middleware goes in `server.js`, above the routes:
+
+```js
+// server.js — add above the route handlers
+app.use((req, res, next) => {
+  res.set("X-Mini-Order-Pod", process.env.HOSTNAME || "unknown");
+  next();
+});
+```
+
+(Kubernetes sets `HOSTNAME` to the pod name inside every container — free pod identity, no config needed.)
+
+Then I hammered it:
+
+```bash
+for i in $(seq 1 10); do curl -s -o /dev/null -D - localhost:8080/healthz | grep X-Mini-Order-Pod; done
+```
+
+```text
+X-Mini-Order-Pod: mini-order-backend-7d9c6b8f4d-x2jlp
+X-Mini-Order-Pod: mini-order-backend-7d9c6b8f4d-x2jlp
+X-Mini-Order-Pod: mini-order-backend-7d9c6b8f4d-x2jlp
+... (all ten, same pod)
+```
+
+Ten requests, one pod. I spent a genuinely annoying twenty minutes convinced my Service was broken — re-reading the selector, checking `kubectl get endpoints`, which showed all three pod IPs sitting right there, healthy.
+
+The Service was fine. **`kubectl port-forward` doesn't go through the Service at all.** Even when you give it `svc/mini-order-backend`, it resolves that to *one pod* at startup and opens a tunnel directly to that single pod. It's a debugging tool, not a load balancer. Every request rides the same tunnel to the same pod until you restart the command.
+
+Load balancing happens when traffic actually enters through the Service's virtual IP — kube-proxy intercepts that and spreads connections across the endpoints ([the networking post](/blog/devops/5-kubernetes-networking-services-dns) covers the machinery). So to see it, you have to make requests *from inside the cluster*, like a real client of the Service would:
+
+```bash
+kubectl run -it --rm curl --image=curlimages/curl --restart=Never -- sh
+```
+
+That drops you into a shell *inside* a throwaway pod. From that shell — not your laptop — run the same loop:
+
+```bash
+for i in $(seq 1 9); do curl -s -o /dev/null -D - http://mini-order-backend/healthz | grep X-Mini-Order-Pod; done
+```
+
+```text
+X-Mini-Order-Pod: mini-order-backend-7d9c6b8f4d-t6wzk
+X-Mini-Order-Pod: mini-order-backend-7d9c6b8f4d-x2jlp
+X-Mini-Order-Pod: mini-order-backend-7d9c6b8f4d-t6wzk
+X-Mini-Order-Pod: mini-order-backend-7d9c6b8f4d-hv4qs
+X-Mini-Order-Pod: mini-order-backend-7d9c6b8f4d-x2jlp
+X-Mini-Order-Pod: mini-order-backend-7d9c6b8f4d-hv4qs
+X-Mini-Order-Pod: mini-order-backend-7d9c6b8f4d-hv4qs
+X-Mini-Order-Pod: mini-order-backend-7d9c6b8f4d-x2jlp
+X-Mini-Order-Pod: mini-order-backend-7d9c6b8f4d-t6wzk
+```
+
+All three pods. Not perfectly round-robin — kube-proxy in iptables mode picks endpoints randomly per connection, so short bursts look lumpy. Over volume it evens out. (Also note `http://mini-order-backend` with no port — the Service listens on 80 and forwards to the container's 3000. Inside the cluster, DNS plus a bare Service name just works.)
+
+Lesson filed permanently: if you're testing anything about Services, test from inside the cluster. Port-forward is a periscope to one pod.
+
+## The cache that lied
+
+Now the real bug. Mini Order System's order list endpoint (`GET /orders`) reads from PostgreSQL, and back when I wrote it, I added a tiny optimization without thinking:
+
+```js
+// server.js
+// In-process cache so GET /orders doesn't hit PostgreSQL on every request.
+const ordersCache = new Map();
+app.get("/orders", async (req, res) => {
+  if (ordersCache.has("all")) return res.json(ordersCache.get("all"));
+  const { rows } = await pool.query("SELECT id, user_id, inventory_id, quantity, status FROM orders ORDER BY created_at DESC");
+  ordersCache.set("all", rows);
+  setTimeout(() => ordersCache.delete("all"), 30_000);
+  return res.json(rows);
+});
+```
+
+A `Map`, a 30-second expiry. Harmless. It *was* harmless — with one replica.
+
+With three replicas there are three processes, three separate `Map`s, three caches that populated at different moments and expire on different clocks. Create or update an order through `POST /orders` or `PATCH /orders/:id/status`, then read from the curl pod:
+
+```text
+$ curl -s http://mini-order-backend/orders
+[{"id":42,"user_id":1,"inventory_id":7,"quantity":2,"status":"pending"}]
+$ curl -s http://mini-order-backend/orders
+[{"id":42,"user_id":1,"inventory_id":7,"quantity":2,"status":"confirmed"}]
+$ curl -s http://mini-order-backend/orders
+[{"id":42,"user_id":1,"inventory_id":7,"quantity":2,"status":"pending"}]
+```
+
+The order status went *backward*. Refresh an order list and watch the response jitter between three values depending on which pod the connection landed on. Nothing crashed. No error, no log line, nothing in `kubectl get events`. The system was perfectly healthy and quietly wrong — which is a much worse failure mode than a crash, because nothing pages you about it.
+
+The fix is not a smarter cache. The fix is admitting the process is the wrong place for state, full stop:
+
+```js
+// server.js — the same handler, cache deleted
+app.get("/orders", async (req, res) => {
+  const { rows } = await pool.query("SELECT id, user_id, inventory_id, quantity, status FROM orders ORDER BY created_at DESC");
+  return res.json(rows);
+});
+```
+
+Delete the cache, let PostgreSQL be the single source of truth, and let Kafka carry the event stream. If that query ever gets too hot, the answer is *shared* state — Redis, or a materialized count — never per-process state. This is the rule the whole series stands on now: **a replica must be able to answer any request using nothing it remembers.** Every replica identical, every replica disposable. It's the same reason sessions can't live in process memory and file uploads can't land on the container filesystem.
+
+Rebuild as `v2`, import, and deploy — which conveniently demos the rolling update:
+
+```bash
+docker build -t mini-order-backend:v2 .
+k3d image import mini-order-backend:v2 -c mini-order
+kubectl set image deployment/mini-order-backend mini-order-backend=mini-order-backend:v2
+kubectl rollout status deployment/mini-order-backend
+```
+
+```text
+Waiting for deployment "mini-order-backend" rollout to finish: 1 out of 3 new replicas have been updated...
+Waiting for deployment "mini-order-backend" rollout to finish: 2 out of 3 new replicas have been updated...
+Waiting for deployment "mini-order-backend" rollout to finish: 1 old replicas are pending termination...
+deployment "mini-order-backend" successfully rolled out
+```
+
+`kubectl get rs` afterwards shows both generations — the old ReplicaSet parked at zero:
+
+```text
+NAME                   DESIRED   CURRENT   READY   AGE
+mini-order-backend-7d9c6b8f4d   0         0         0       2d
+mini-order-backend-6f5b49c9b7   3         3         3       40s
+```
+
+If v2 had been a disaster, `kubectl rollout undo deployment/mini-order-backend` scales the old one back up. I tried it once just to see; it's about as dramatic as flipping a light switch. (One honest note: `kubectl set image` is great for demos and drift for real life — the YAML in git no longer matches the cluster. From now on I edit the manifest and `kubectl apply`, and the tag bump lives in a commit.)
+
+Order lists are now consistent from all three pods. Same data, every request, any pod.
+
+## What still doesn't work
+
+- **The replica count is a number I typed.** Three pods at 3 a.m. is waste; three pods during a traffic spike is an outage. Making the count respond to load is [Horizontal Pod Autoscaling](/blog/devops/9-horizontal-pod-autoscaling).
+- **Rollouts trust pods too early.** Kubernetes considers a pod "ready" the moment the container runs — but Mini Order System needs a beat to open its Postgres pool. During rollouts, a sliver of requests can hit a pod that's up but not actually ready to serve. Readiness probes fix this properly in [the health checks post](/blog/devops/12-health-checks-probes).
+- **Postgres is still outside the cluster**, a Docker container on my laptop with a connection string hardcoded into the image (yes, hardcoded — [post 08](/blog/devops/8-configmaps-and-secrets) is coming). The API is now resilient and replicated; the database is a single container held together by hope.
+
+That last one is the loudest problem. Three replicas of a stateless API pointing at one un-managed database is scaffolding, not a system.
+
+## Next up
+
+Bringing Postgres into the cluster — which means confronting the thing Kubernetes is famously awkward at: state that must survive. PersistentVolumes, PersistentVolumeClaims, StorageClasses, and a database that doesn't evaporate when its pod does. That's [Persistent Storage: PVs, PVCs, and Databases That Don't Evaporate](/blog/devops/7-persistent-storage-pvs-pvcs).
