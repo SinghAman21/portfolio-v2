@@ -1,0 +1,287 @@
+---
+title: "7. Persistent Storage: PVs, PVCs, and Databases That Don't Evaporate"
+publishDate: "20 August 2026"
+slug: "devops/7-persistent-storage-pvs-pvcs"
+description: "Moving Postgres into the cluster without losing data on every restart. The PV/PVC/StorageClass mental model, the PVC that sat Pending for two hours, and the PGDATA gotcha that bites everyone on real block storage."
+tags: ["kubernetes", "devops", "storage", "postgres", "pvc", "series"]
+---
+
+Up to now, Mini Order System's Postgres has been living a lie. The API runs in the cluster — [three replicas, rolling updates, the works](/blog/devops/6-multi-replica-scaling) — but the database is a Docker container on my laptop, reached through `host.k3d.internal`. That was a deliberate corner-cut back in [post 4](/blog/devops/4-kubernetes-running-locally), and this week it finally collected its debt: I restarted Docker Desktop to fix an unrelated networking hiccup, the Postgres container came back empty because I'd never given it a volume, and every user, inventory record, order, and order status event I'd created over five posts was gone.
+
+Nobody to blame but me. But it's the right kind of failure, because it forces the question this post answers: how do you run something in Kubernetes that *must not lose its data*, when everything we've learned so far treats pods as disposable?
+
+## What happens without persistent storage
+
+Let's establish the failure mode properly instead of hand-waving it. A container's filesystem is ephemeral — it's a writable layer on top of the image, and it dies with the container. Pods inherit that. If I run Postgres in a bare pod and it writes to `/var/lib/postgresql/data`, that data lives in the container's writable layer, which lives exactly as long as the container does.
+
+I proved it to myself before writing this:
+
+```bash
+kubectl run pg-test --image=postgres:16 --env=POSTGRES_PASSWORD=throwaway
+kubectl exec -it pg-test -- psql -U postgres -c "CREATE TABLE doomed (id int);"
+kubectl delete pod pg-test
+kubectl run pg-test --image=postgres:16 --env=POSTGRES_PASSWORD=throwaway
+kubectl exec -it pg-test -- psql -U postgres -c "\dt"
+```
+
+```text
+Did not find any relations.
+```
+
+Gone. And it's worse than "gone on delete" — remember from [post 6](/blog/devops/6-multi-replica-scaling) that Kubernetes deletes and recreates pods *routinely*. A rolling update, a node drain, an OOM kill: every one of those is a fresh container with a fresh filesystem. Running a database on ephemeral storage isn't risky, it's a countdown.
+
+So we need storage that has a *different lifecycle* than the pod. That's the entire idea. Everything else in this post is plumbing around that one sentence.
+
+## The mental model: claims, volumes, and the vending machine
+
+Kubernetes splits storage into three objects, and the split confused me until I found the right framing.
+
+A **PersistentVolume (PV)** is an actual piece of storage — a directory on a node, an EBS volume, an NFS export. It's a cluster-level resource, like a node. Some admin (or some automation) made it exist.
+
+A **PersistentVolumeClaim (PVC)** is a *request* for storage. "I need 2Gi, and I need to mount it read-write." Your pod never references a PV directly; it references a claim, and Kubernetes binds the claim to a matching volume.
+
+A **StorageClass** is the vending machine. Instead of an admin pre-creating PVs by hand, a StorageClass names a *provisioner* — a piece of software that creates PVs on demand when a claim shows up. You ask the class for 2Gi, it stamps out a PV, binds your claim to it. This is called dynamic provisioning and it's how essentially all real clusters work.
+
+The reason for the indirection clicked for me when I thought about portability: the PVC is the *app's* half of the contract ("I need 2Gi") and the PV/StorageClass is the *infrastructure's* half ("here's how 2Gi gets made on this cluster"). The same PVC YAML works on my k3d cluster and on EKS — only the class behind it changes. Decoupling the request from the fulfillment is the whole trick.
+
+One more thing you need to read honestly before the marketing does: **access modes**. `ReadWriteOnce` (RWO) means one *node* can mount the volume read-write — note node, not pod. `ReadWriteMany` (RWX) means many nodes simultaneously. Almost all block storage — cloud disks, local disks — is RWO only. RWX needs a shared filesystem like NFS or CephFS, which you probably don't have and mostly don't want. This is why "just mount the same volume into all my replicas" is not a plan, and it's half the reason databases are hard in Kubernetes.
+
+k3s ships with a StorageClass called `local-path`, marked as the default:
+
+```bash
+kubectl get storageclass
+```
+
+```text
+NAME                   PROVISIONER             RECLAIMPOLICY   VOLUMEBINDINGMODE      ALLOWVOLUMEEXPANSION   AGE
+local-path (default)   rancher.io/local-path   Delete          WaitForFirstConsumer   false                  21d
+```
+
+Its provisioner just creates a directory on whichever node the pod lands on and bind-mounts it in. Dead simple, genuinely useful for dev, and **absolutely not production storage** — the data lives on one node's disk, and if that node dies, so does your database. On a real cluster you'd use the cloud's CSI driver (EBS, Persistent Disk, Azure Disk) and this class would be something like `gp3`. Everything else in this post transfers; the class doesn't.
+
+Keep that `WAITFORFIRSTCONSUMER` column in mind. It's about to cost me two hours.
+
+## The claim
+
+Here's the PVC. It's the smallest YAML in the series so far:
+
+```yaml
+# k8s/postgres-pvc.yaml
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: postgres-data
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 2Gi
+```
+
+No `storageClassName` — omitting it means "use the default class," which is `local-path` here. I go back and forth on whether being explicit is better; I've settled on omitting it in the base YAML so the same file works on any cluster with a sane default, and overriding it per-environment later (that's a [Kustomize job](/blog/devops/14-multi-environment-kustomize)).
+
+I applied it, then did what I always do — checked on it:
+
+```bash
+kubectl apply -f postgres-pvc.yaml
+kubectl get pvc
+```
+
+```text
+NAME            STATUS    VOLUME   CAPACITY   ACCESS MODES   STORAGECLASS   AGE
+postgres-data   Pending                                      local-path     8s
+```
+
+Pending. Fine, provisioning takes a moment. Except it was still Pending at thirty seconds. And five minutes. I re-read my YAML. I deleted and recreated the claim. I checked whether the provisioner pod was running (it was). I read the local-path-provisioner logs, which said nothing at all, which felt personal. Somewhere around the two-hour mark of intermittent poking I finally did the thing I should have done at second ten:
+
+```bash
+kubectl describe pvc postgres-data
+```
+
+```text
+Name:          postgres-data
+Namespace:     default
+StorageClass:  local-path
+Status:        Pending
+...
+Events:
+  Type    Reason                Age                   From                         Message
+  ----    ------                ----                  ----                         -------
+  Normal  WaitForFirstConsumer  12s (x26 over 6m14s)  persistentvolume-controller  waiting for first consumer to be created before binding
+```
+
+The answer was sitting in the events the whole time. `WaitForFirstConsumer` is the binding mode we saw in the StorageClass, and it means: **don't provision anything until a pod actually tries to use this claim.** Which is smart, once you know — with node-local storage, the volume has to be created on the node where the pod will run, so provisioning can't happen until the scheduler picks a node. Cloud CSI drivers use the same mode so your disk gets created in the right availability zone.
+
+So a Pending PVC with no pod isn't broken. It's waiting, exactly like it said it would, in the events I didn't read. Lesson re-learned for the third time this series: `kubectl describe` first, theories second.
+
+## The Deployment
+
+Now the pod that consumes the claim. Yes, a **Deployment** for a database — I made the case in [the workloads post](/blog/devops/3-deployments-statefulsets-daemonsets), but the short version: StatefulSets earn their complexity when you have *multiple* stateful replicas that need stable identities. We have exactly one Postgres. One replica plus one PVC in a Deployment is fine, with a single non-negotiable tweak: the update strategy.
+
+```yaml
+# postgres-deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgres
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: postgres
+  template:
+    metadata:
+      labels:
+        app: postgres
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:16
+          ports:
+            - containerPort: 5432
+          env:
+            - name: POSTGRES_DB
+              value: mini-order
+            - name: POSTGRES_PASSWORD
+              value: mini-order-dev-password   # hardcoded. yes. next post.
+            - name: PGDATA
+              value: /var/lib/postgresql/data/pgdata
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/postgresql/data
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: postgres-data
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres
+spec:
+  selector:
+    app: postgres
+  ports:
+    - port: 5432
+      targetPort: 5432
+```
+
+Two lines here deserve a reaction, because both exist to prevent specific disasters.
+
+**`strategy: Recreate`.** The default Deployment strategy is RollingUpdate — start the new pod, then kill the old one. For a stateless API that's the whole point. For Postgres it's a trap: the new pod tries to mount `postgres-data` while the old pod still holds it, and since local-path is RWO-per-node you *might* get away with it on one node — right up until you get two Postgres processes pointed at the same data directory, which is how you corrupt a database. `Recreate` means kill the old pod fully, *then* start the new one. Downtime on every update, and correct. Databases and rolling updates don't mix at this level of sophistication.
+
+**`PGDATA: /var/lib/postgresql/data/pgdata`.** This one I'm setting preemptively, and I want to be honest that local-path didn't actually punish me for skipping it — the provisioner hands Postgres an empty directory and initdb is happy. But I first built this setup months ago on a cloud cluster with EBS-backed volumes, and there it fails immediately, because a freshly formatted ext4 volume isn't empty — it contains a `lost+found` directory, and initdb refuses to run in a non-empty directory:
+
+```text
+initdb: error: directory "/var/lib/postgresql/data" exists but is not empty
+initdb: hint: If you want to create a new database system, either remove or empty
+the directory "/var/lib/postgresql/data" or run initdb with an argument other
+than "/var/lib/postgresql/data".
+```
+
+The fix is exactly this env var: mount the volume at `/var/lib/postgresql/data`, point `PGDATA` at a subdirectory inside it, and `lost+found` stops mattering. It costs nothing on k3d and saves a CrashLoopBackOff the day this YAML meets real block storage, so it goes in now.
+
+Apply it all, and watch the claim come alive:
+
+```bash
+kubectl apply -f postgres-deployment.yaml
+kubectl get pvc,pods
+```
+
+```text
+NAME                                  STATUS   VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS   AGE
+persistentvolumeclaim/postgres-data   Bound    pvc-8f2c1a77-64b1-4e0e-9c3d-1d2a9b7e5f10   2Gi        RWO            local-path     2h
+
+NAME                            READY   STATUS    RESTARTS   AGE
+pod/postgres-7d9c644c9b-xj4vm   1/1     Running   0          19s
+pod/mini-order-backend-6b7f9d5c8-2lqzw   1/1     Running   0          6d
+pod/mini-order-backend-6b7f9d5c8-9wk6t   1/1     Running   0          6d
+pod/mini-order-backend-6b7f9d5c8-t8hcn   1/1     Running   0          6d
+```
+
+`Bound`. The moment the scheduler placed the pod, the provisioner created the PV and the claim bound to it. Two hours of my life, explained by one column in `kubectl get storageclass`.
+
+## Wiring Mini Order System to it
+
+The app code changes not at all — this is the payoff of keeping config in the environment. The Deployment for `mini-order-backend` currently points at my laptop:
+
+```yaml
+env:
+  - name: DATABASE_URL
+    value: postgres://postgres:mini-order-dev-password@host.k3d.internal:5432/mini-order
+```
+
+It now points at the Service, using [cluster DNS](/blog/devops/5-kubernetes-networking-services-dns):
+
+```yaml
+env:
+  - name: DATABASE_URL
+    value: postgres://postgres:mini-order-dev-password@postgres:5432/mini-order
+```
+
+Just `postgres` — same namespace, so the short name resolves (it's shorthand for `postgres.default.svc.cluster.local`). Apply, let the rolling update do its thing, run the schema migration once against the new database, and Mini Order System is finally a system that lives entirely inside the cluster:
+
+```bash
+kubectl apply -f mini-order-deployment.yaml
+kubectl exec -it deploy/postgres -- psql -U postgres -d mini-order -f /dev/stdin < schema.sql
+```
+
+## Breaking it on purpose
+
+The claim this post makes is "data survives pod death." Never believe that until you've killed the pod. Create an order through the API:
+
+```bash
+curl -s -X POST http://localhost:8080/orders -H 'Content-Type: application/json' \
+  -d '{"userId":1,"inventoryId":7,"quantity":2}'
+```
+
+```json
+{"id":42,"user_id":1,"inventory_id":7,"quantity":2,"status":"pending"}
+```
+
+Now murder the database:
+
+```bash
+kubectl delete pod -l app=postgres
+kubectl get pods -l app=postgres -w
+```
+
+```text
+postgres-7d9c644c9b-xj4vm   1/1     Terminating   0          25m
+postgres-7d9c644c9b-fq8rn   0/1     ContainerCreating   0    2s
+postgres-7d9c644c9b-fq8rn   1/1     Running             0    6s
+```
+
+New pod, same claim, same underlying directory. And:
+
+```bash
+curl -s http://localhost:8080/orders/42
+```
+
+```json
+{"id":42,"user_id":1,"inventory_id":7,"quantity":2,"status":"pending"}
+```
+
+The order survived. Postgres logs even show a normal crash recovery — "database system was not properly shut down; automatic recovery in progress" — because deleting the pod is an abrupt stop. It handles that fine, but it's a nudge toward the graceful-shutdown work we haven't done yet.
+
+Now the scarier experiment, which I did *deliberately and with nothing I cared about*, so you don't do it accidentally. The pod is disposable. The PVC is not:
+
+```bash
+kubectl delete pvc postgres-data
+```
+
+Look back at that StorageClass output: `RECLAIMPOLICY: Delete`. When a claim is deleted, the bound PV — and the actual data — is deleted with it. There's no confirmation prompt, no soft-delete, no undo. On this cluster that's a shrug; on a production cluster, `reclaimPolicy: Retain` (keep the PV around as an orphan when the claim goes) is the difference between an incident and a catastrophe. The uncomfortable truth of this whole post: we've protected the data from Kubernetes' pod churn, but not from *us*.
+
+## What still doesn't work
+
+- **That password is in the YAML, twice, in plaintext, and this file is going in git.** I've been wincing at it the entire post. Fixing it is literally the [next post](/blog/devops/8-configmaps-and-secrets).
+- **Surviving a pod restart is not a backup.** If the node's disk dies, or I fat-finger a `DROP TABLE`, or someone repeats my PVC deletion trick, the data is gone. Real backups and a restore drill are [post 15](/blog/devops/15-disaster-recovery-backups).
+- **One Postgres replica is a single point of failure**, and `Recreate` means every image bump is a small outage. That's a known, accepted debt for now — it's on the list when we [audit Mini Order System for production readiness](/blog/devops/16-production-readiness-checklist).
+- **local-path is dev scaffolding.** The data is welded to one node. The YAML shape is real; the StorageClass is not.
+
+## Next up
+
+The database moved into the cluster, but it dragged a plaintext password into two YAML files on its way in. Next post: [ConfigMaps and Secrets](/blog/devops/8-configmaps-and-secrets) — getting configuration out of the manifests, learning why a Secret is not encryption, and the env-var reload gotcha that got me.
