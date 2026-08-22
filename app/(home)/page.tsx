@@ -117,10 +117,18 @@ export default function Home() {
       />
 
       <HomeLink
+        href="/products"
+        label="products"
+        description="Useful developer products with straightforward one-time pricing and delivery."
+        animationDelay="0.26s"
+        shortcutKey="S"
+      />
+
+      <HomeLink
         href="/about"
         label="about"
         description="See yourself about me and how I reached the current stage of my journey as a developer."
-        animationDelay="0.26s"
+        animationDelay="0.27s"
         shortcutKey="A"
       />
 

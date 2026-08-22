@@ -20,6 +20,26 @@ You can start editing the page by modifying `app/page.tsx`. The page auto-update
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
+## Products and Dodo Payments
+
+The `/products` route lists the products in `lib/products.ts`. The included `yourbid-lol` product uses a one-time `$10.00 USD` Dodo Payments checkout and is configured to deliver private GitHub repository access through Dodo’s GitHub entitlement system.
+
+Copy `.env.example` to `.env.local` and fill in the values:
+
+```bash
+cp .env.example .env.local
+```
+
+Before accepting live payments in the Dodo dashboard:
+
+1. Create a one-time product named `yourbid-lol` priced at `$10.00 USD`.
+2. Create a GitHub entitlement for the private repository, use the least privilege needed (usually `pull`), and attach it to the product.
+3. Set `DODO_YOURBID_PRODUCT_ID` to that product’s ID.
+4. Use `test_mode` and a test product while developing, then switch to `live_mode` and the live product ID for production.
+5. Configure Dodo’s entitlement/webhook delivery in the dashboard. GitHub access is delivered by Dodo after the purchaser authorizes GitHub; the browser return page alone does not grant access.
+
+The checkout API always requests `USD` and disables currency selection. Keep `DODO_PAYMENTS_API_KEY` and all other secrets server-side.
+
 ## Learn More
 
 To learn more about Next.js, take a look at the following resources:
