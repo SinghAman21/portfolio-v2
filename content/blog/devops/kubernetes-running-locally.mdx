@@ -65,56 +65,54 @@ Three "machines," all Docker containers, all pretending very convincingly to be 
 
 ## Containerizing Mini Order System
 
-The app, if you skipped [post 1](/blog/devops/1-the-system-were-building): a URL shortener with click analytics. Three routes and a hot path. Here's `server.js`, complete — real code, not pseudocode. (Building along from scratch? `npm init -y && npm install express pg` first, so the `package*.json` files the Dockerfile copies actually exist.)
+The app, if you skipped [post 1](/blog/devops/1-the-system-were-building): an order API backed by PostgreSQL and Kafka. Its main routes are `POST /orders`, `GET /orders`, `GET /orders/:id`, and `PATCH /orders/:id/status`, with supporting `users` and `inventory` reads. Here's `server.js`, complete — real code, not pseudocode. (Building along from scratch? `npm init -y && npm install express pg kafkajs` first, so the `package*.json` files the Dockerfile copies actually exist.)
 
 ```js
 // server.js
 const express = require("express");
 const { Pool } = require("pg");
-const crypto = require("crypto");
-
+const { Kafka } = require("kafkajs");
 const app = express();
 app.use(express.json());
-
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
-
-// create a short link
-app.post("/links", async (req, res) => {
-  const code = crypto.randomBytes(4).toString("base64url");
-  await pool.query(
-    "INSERT INTO links (code, url) VALUES ($1, $2)",
-    [code, req.body.url]
-  );
-  res.status(201).json({ code });
+const kafka = new Kafka({ clientId: "mini-order-backend", brokers: (process.env.KAFKA_BROKERS || "kafka:9092").split(",") });
+const producer = kafka.producer();
+async function publishOrderEvent(event) {
+  await producer.send({ topic: "orders", messages: [{ key: String(event.orderId), value: JSON.stringify(event) }] });
+}
+app.post("/orders", async (req, res) => {
+  const { userId, inventoryId, quantity } = req.body;
+  const { rows } = await pool.query(`INSERT INTO orders (user_id, inventory_id, quantity, status) VALUES ($1, $2, $3, $4) RETURNING id, user_id, inventory_id, quantity, status, created_at`, [userId, inventoryId, quantity, "pending"]);
+  const order = rows[0];
+  await publishOrderEvent({ type: "order.created", orderId: order.id, order });
+  res.status(201).json(order);
 });
-
-// stats for a link
-app.get("/links/:code/stats", async (req, res) => {
-  const { rows } = await pool.query(
-    `SELECT l.code, l.url, COUNT(c.id)::int AS clicks
-     FROM links l LEFT JOIN clicks c ON c.link_id = l.id
-     WHERE l.code = $1 GROUP BY l.id`,
-    [req.params.code]
-  );
+app.get("/orders", async (req, res) => {
+  const { rows } = await pool.query("SELECT id, user_id, inventory_id, quantity, status, created_at FROM orders ORDER BY created_at DESC");
+  res.json(rows);
+});
+app.get("/orders/:id", async (req, res) => {
+  const { rows } = await pool.query("SELECT id, user_id, inventory_id, quantity, status, created_at FROM orders WHERE id = $1", [req.params.id]);
   if (!rows.length) return res.status(404).end();
   res.json(rows[0]);
 });
-
-// the hot path: redirect + record the click
-app.get("/:code", async (req, res) => {
-  const { rows } = await pool.query(
-    "SELECT id, url FROM links WHERE code = $1",
-    [req.params.code]
-  );
+app.patch("/orders/:id/status", async (req, res) => {
+  const { rows } = await pool.query("UPDATE orders SET status = $1 WHERE id = $2 RETURNING id, user_id, inventory_id, quantity, status, created_at", [req.body.status, req.params.id]);
   if (!rows.length) return res.status(404).end();
-  await pool.query(
-    "INSERT INTO clicks (link_id, referrer) VALUES ($1, $2)",
-    [rows[0].id, req.get("referer") || null]
-  );
-  res.redirect(302, rows[0].url);
+  const order = rows[0];
+  await publishOrderEvent({ type: "order.status_changed", orderId: order.id, status: order.status });
+  res.json(order);
 });
-
-app.listen(3000, () => console.log("mini-order listening on 3000"));
+app.get("/users/:id", async (req, res) => {
+  const { rows } = await pool.query("SELECT id, name, email FROM users WHERE id = $1", [req.params.id]);
+  if (!rows.length) return res.status(404).end();
+  res.json(rows[0]);
+});
+app.get("/inventory", async (req, res) => {
+  const { rows } = await pool.query("SELECT id, name, stock FROM inventory ORDER BY id");
+  res.json(rows);
+});
+app.listen(3000, async () => { await producer.connect(); console.log("mini-order listening on 3000"); });
 ```
 
 The Dockerfile is deliberately boring:
@@ -151,18 +149,11 @@ Mini Order System expects two tables, and nothing creates them automatically —
 
 ```sql
 -- schema.sql
-CREATE TABLE IF NOT EXISTS links (
-  id         SERIAL PRIMARY KEY,
-  code       TEXT UNIQUE NOT NULL,
-  url        TEXT NOT NULL,
-  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
-);
-
-CREATE TABLE IF NOT EXISTS clicks (
-  id       SERIAL PRIMARY KEY,
-  link_id  INTEGER NOT NULL REFERENCES links(id),
-  ts       TIMESTAMPTZ NOT NULL DEFAULT now(),
-  referrer TEXT
+CREATE TABLE IF NOT EXISTS users (id SERIAL PRIMARY KEY, name TEXT NOT NULL, email TEXT UNIQUE NOT NULL);
+CREATE TABLE IF NOT EXISTS inventory (id SERIAL PRIMARY KEY, name TEXT NOT NULL, stock INTEGER NOT NULL DEFAULT 0);
+CREATE TABLE IF NOT EXISTS orders (
+  id SERIAL PRIMARY KEY, user_id INTEGER NOT NULL REFERENCES users(id), inventory_id INTEGER NOT NULL REFERENCES inventory(id),
+  quantity INTEGER NOT NULL CHECK (quantity > 0), status TEXT NOT NULL, created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 ```
 
@@ -297,25 +288,29 @@ The Service is `ClusterIP` — a stable virtual IP that only exists *inside* the
 kubectl port-forward svc/mini-order-backend 3000:80
 ```
 
-Then, from another terminal — create a link, follow it, check the stats:
+Then, from another terminal — create an order, list it, inspect it, and move it through a status change:
 
 ```bash
-curl -s -X POST localhost:3000/links \
+curl -s -X POST localhost:3000/orders \
     -H 'content-type: application/json' \
-    -d '{"url":"https://k3d.io"}'
-{"code":"pXm4Qz0A"}
+    -d '{"userId":1,"inventoryId":7,"quantity":2}'
+{"id":42,"user_id":1,"inventory_id":7,"quantity":2,"status":"pending"}
 
-curl -si localhost:3000/pXm4Qz0A | head -2
-HTTP/1.1 302 Found
-Location: https://k3d.io
+curl -s localhost:3000/orders
+[{"id":42,"user_id":1,"inventory_id":7,"quantity":2,"status":"pending"}]
 
-curl -s localhost:3000/links/pXm4Qz0A/stats
-{"code":"pXm4Qz0A","url":"https://k3d.io","clicks":1}
+curl -s localhost:3000/orders/42
+{"id":42,"user_id":1,"inventory_id":7,"quantity":2,"status":"pending"}
+
+curl -s -X PATCH localhost:3000/orders/42/status \
+    -H 'content-type: application/json' \
+    -d '{"status":"confirmed"}'
+{"id":42,"user_id":1,"inventory_id":7,"quantity":2,"status":"confirmed"}
 ```
 
-A request left my terminal, entered a port-forward tunnel into the cluster, hit a Service, landed on a pod on one of three nodes, queried a database back out on my host, and came home. That's the whole pipeline, working.
+A request left my terminal, entered a port-forward tunnel into the cluster, hit a Service, landed on a pod on one of three nodes, wrote to PostgreSQL back out on my host, and published an order event to Kafka. That's the whole pipeline, working.
 
-One more test, because seeing it once made Kubernetes click harder than any diagram. Kill the pod on purpose:
+One more test, because seeing it once made Kubernetes easier to understand than any diagram. Kill the pod on purpose:
 
 ```bash
 kubectl delete pod mini-order-backend-7d9c6b58f4-x8vqn

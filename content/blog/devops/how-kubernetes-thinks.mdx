@@ -8,7 +8,7 @@ tags: ["kubernetes", "devops", "control-plane", "pods", "reference", "series"]
 
 I wasted my first few weeks with Kubernetes because I thought of it as a deployment tool. You give it a container, it runs the container, done — a fancier `docker run`. Every confusing behavior I hit traces back to that wrong model. Kubernetes is not a tool that does things when you ask. It's a system that *continuously corrects reality* toward a state you described. Once that clicked, half the weirdness stopped being weird.
 
-This is the reference post for that mental model. The [series overview](/blog/devops/1-the-system-were-building) explains what we're building (Mini Order System, a URL shortener); this post explains the machine we're building it on. If you're here from a later post because some kubectl output made no sense, this is the foundation.
+This is the reference post for that mental model. The [series overview](/blog/devops/1-the-system-were-building) explains what we're building (Mini Order System, an order-processing API); this post explains the machine we're building it on. If you're here from a later post because some kubectl output made no sense, this is the foundation.
 
 ## The mental model: a thermostat, not a script
 
@@ -38,7 +38,7 @@ But here's the thing that took me embarrassingly long to internalize:
 
 **Pods are cattle. Aggressively, deliberately cattle.**
 
-A Pod is never healed. If the Node it's on dies, the Pod is gone — a *replacement* Pod gets created elsewhere, with a new name and a new IP. If a rollout replaces it, gone. Kubernetes does not move Pods, does not resuscitate Pods, does not apologize for Pods. Every layer above (Services, Deployments) exists specifically because Pods are this disposable. When Mini Order System's redirect latency spiked and I went looking for "the pod handling that request," it had already been replaced twice. That's normal. That's the design.
+A Pod is never healed. If the Node it's on dies, the Pod is gone — a *replacement* Pod gets created elsewhere, with a new name and a new IP. If a rollout replaces it, gone. Kubernetes does not move Pods, does not resuscitate Pods, does not apologize for Pods. Every layer above (Services, Deployments) exists specifically because Pods are this disposable. When Mini Order System.s order API latency spiked and I went looking for "the pod handling that request," it had already been replaced twice. That's normal. That's the design.
 
 ## The control plane: who's actually doing all this
 

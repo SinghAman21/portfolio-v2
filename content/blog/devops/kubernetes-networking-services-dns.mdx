@@ -170,4 +170,4 @@ Pods have real IPs you must never depend on. A Service is a stable virtual IP th
 
 When something can't reach something, the debugging order is always the same: does the DNS name resolve → does the EndpointSlice have addresses → is the app on the other end actually listening on `targetPort`. In my experience it's the EndpointSlice, and it's a label typo.
 
-Next up in the build: [multi-replica scaling and load balancing](/blog/devops/6-multi-replica-scaling), where the Service finally gets more than one pod to spread traffic across — and where keeping a click counter in process memory stops being a cute shortcut and starts being a bug.
+Next up in the build: [multi-replica scaling and load balancing](/blog/devops/6-multi-replica-scaling), where the Service finally gets more than one pod to spread traffic across — and where keeping an order-status cache in process memory stops being a cute shortcut and starts being a bug.

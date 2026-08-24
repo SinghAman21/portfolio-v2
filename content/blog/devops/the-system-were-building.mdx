@@ -16,15 +16,15 @@ This is the map. If you landed here from a later post wondering "wait, what app 
 
 ## The app we're building
 
-Meet **Mini Order System** — a URL shortener with click analytics.
+Meet **Mini Order System** — a small order API with users, inventory, PostgreSQL, and Kafka order events.
 
-I can hear the groan. A URL shortener is the todo app of backend engineering. But I picked it deliberately, because underneath the boring CRUD there's a traffic shape that exercises almost everything Kubernetes is actually for:
+It is deliberately small, but it has a traffic shape that exercises almost everything Kubernetes is actually for:
 
-- **A screaming-hot read path.** `GET /:code` looks up a short code and issues a redirect. This is the endpoint that gets hammered when a link goes viral. It needs to be fast, it needs many replicas, and it's what we'll point the autoscaler at.
-- **A write on every single click.** Each redirect also inserts a row into a `clicks` table — timestamp, referrer. So the hot path isn't just a cache read; it touches the database under load. That's a much more honest scaling problem.
-- **A boring CRUD path.** `POST /links` creates a short link, `GET /links/:code/stats` returns click counts. Low traffic, no drama. Useful precisely because it behaves differently from the hot path.
+- **A busy read path.** `GET /orders` lists recent orders and `GET /orders/:id` returns the detail needed by the dashboard. These reads need to stay responsive as the order history grows, so they are what we'll exercise with multiple replicas and the autoscaler.
+- **A write with downstream work.** `POST /orders` validates a user and inventory item, writes the order to PostgreSQL, and publishes an order-created event to Kafka. The request path is small, but it touches both durable storage and an event stream under load.
+- **A state transition path.** `PATCH /orders/:id/status` changes the order lifecycle and publishes an order-status event. The supporting `users` and `inventory` reads are intentionally ordinary, which makes their behavior useful to compare with order writes.
 
-Three endpoints. Two tables — `links (id, code, url, created_at)` and `clicks (id, link_id, ts, referrer)`. Small enough that the application code never gets in the way of the infrastructure lessons, real enough that the infrastructure lessons matter. When we load test in [the HPA post](/blog/devops/9-horizontal-pod-autoscaling), we're not scaling a hello-world — we're scaling something with a database behind it, and the database becomes the bottleneck the way it does in real systems.
+Five core API routes — `POST /orders`, `GET /orders`, `GET /orders/:id`, `PATCH /orders/:id/status`, plus `users` and `inventory` reads. PostgreSQL stores users, inventory, and orders; Kafka carries order-created and order-status events. Small enough that the application code never gets in the way of the infrastructure lessons, real enough that the infrastructure lessons matter. When we load test in [the HPA post](/blog/devops/9-horizontal-pod-autoscaling), we're not scaling a hello-world — we're scaling something with a database behind it, and the database becomes the bottleneck the way it does in real systems.
 
 If the patterns work for Mini Order System, they port to whatever you're running. The app is a vehicle. The traffic shape is the point.
 
