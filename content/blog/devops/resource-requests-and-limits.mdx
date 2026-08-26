@@ -1,0 +1,196 @@
+---
+title: "10. Resource Requests and Limits: The Guardrails That Keep the Cluster Stable"
+publishDate: "26 August 2026"
+slug: "devops/10-resource-requests-and-limits"
+description: "Requests are a scheduling promise, limits are runtime enforcement — and confusing the two is how you get OOMKilled pods and invisible CPU throttling. Setting Mini Order System's numbers from real load data instead of guesses."
+tags: ["kubernetes", "devops", "resources", "oomkilled", "series"]
+---
+
+Confession time: every resource number in this series so far has been a guess. When I set up the [HPA last post](/blog/devops/9-horizontal-pod-autoscaling), the autoscaler was doing math against a CPU request of `100m` that I picked because it looked reasonable in someone else's blog post. The HPA scales on *percentage of request*. If the request is fiction, the autoscaling is fiction too.
+
+This post is where I stop guessing. We're going to measure what Mini Order System actually uses under load, set requests and limits from that data, and then deliberately set them wrong to see exactly what each failure mode looks like. One of them is loud. One of them is completely silent, and the silent one is worse.
+
+## What happens without this
+
+Here's the scenario that forces the issue. Say you deploy mini-order-backend with no resources block at all — which is what `kubectl` happily lets you do. Kubernetes now has zero information about this pod. So the scheduler places it wherever there's room *by pod count*, not by actual usage. Ten of these unbounded pods can land on one node, each one convinced it owns all 4GB of RAM.
+
+Then traffic arrives. Node's heap grows. Postgres wants its shared buffers. The node runs out of memory, and the kernel OOM killer starts shooting processes — and without requests, your pods are `BestEffort` class, which means they're first against the wall. Not the pod that caused the problem. Whichever one the kernel got to first. I've watched a healthy Postgres get killed because a neighboring app leaked memory. That's what "no guardrails" costs you: failures land on the wrong workload.
+
+At small scale you never see this, which is exactly why it bites later. Three pods on a laptop cluster coexist fine. Thirty pods on three production nodes, all lying about their appetite? That's a cluster that falls over on Black Friday.
+
+## The mental model: a promise and a ceiling
+
+The docs present requests and limits as a pair, which makes them sound like a min/max of the same thing. They're not. They're two different mechanisms that happen to live in the same YAML block.
+
+**Requests are a scheduling promise.** When you set `requests: cpu: 100m`, you're telling the scheduler: "reserve me this much when you pick a node." The scheduler is a bin-packer. Each node has allocatable capacity; each pod's requests subtract from it. Once a node's requested CPU adds up to its allocatable CPU, no more pods schedule there — *even if actual usage is 2%*. Requests are about bookkeeping, not reality. A pod can use less than its request forever, or more than its request whenever there's slack. The scheduler never looks at real usage. That surprised me for an embarrassingly long time.
+
+**Limits are runtime enforcement.** The kubelet translates limits into cgroup settings on the node, and the kernel enforces them. And here's the part that matters: **the two resources are enforced completely differently.**
+
+- **Memory limit exceeded → your process dies.** Memory is incompressible; the kernel can't give you 300Mi of a 256Mi allowance. It kills the container. You'll see `OOMKilled`, exit code 137, and a restart.
+- **CPU limit exceeded → your process waits.** CPU is compressible. The kernel uses CFS quota: within each 100ms window, your container gets its slice, and when the slice is spent, it's paused until the next window. Nothing dies. Nothing logs. Your app just gets *slow*.
+
+That asymmetry is the whole game. Memory problems announce themselves with a corpse. CPU problems just quietly stretch your latency.
+
+There's a third piece: **QoS classes**. Kubernetes derives one from your resources block, and it decides who gets evicted first when a node is under memory pressure:
+
+- **Guaranteed** — every container has requests equal to limits, for both CPU and memory. Evicted last.
+- **Burstable** — has some requests, but they don't all equal limits. Evicted after BestEffort.
+- **BestEffort** — no requests, no limits. Evicted first, no questions asked.
+
+You don't set the class; your numbers imply it. Check with `kubectl get pod <name> -o jsonpath='{.status.qosClass}'`.
+
+## Measuring instead of guessing
+
+k3s bundles metrics-server (one of the reasons I picked it back in [the local setup post](/blog/devops/4-kubernetes-running-locally)), so `kubectl top` works out of the box. I reused the k6 script from the [HPA post](/blog/devops/9-horizontal-pod-autoscaling) — 200 virtual users creating orders and looking up their statuses — and watched:
+
+```bash
+kubectl top pods -l app=mini-order-backend
+```
+
+```text
+NAME                         CPU(cores)   MEMORY(bytes)
+mini-order-backend-7d9c4b8f6d-2xkzq   287m         96Mi
+mini-order-backend-7d9c4b8f6d-9wlfp   301m         101Mi
+```
+
+Idle, each pod sits around `3m` CPU and `70Mi` memory. Under heavy load, ~300m and ~100Mi. Postgres under the same load: ~180m CPU, ~210Mi memory (Postgres memory creeps up as its buffers warm — expected).
+
+From that, the numbers I landed on:
+
+Both blocks go inside the container entry under `spec.template.spec.containers` in the respective Deployment files:
+
+```yaml
+# k8s/mini-order-backend-deployment.yaml — inside the mini-order-backend container
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    cpu: 500m
+    memory: 256Mi
+```
+
+```yaml
+# k8s/postgres-deployment.yaml — inside the postgres container
+resources:
+  requests:
+    cpu: 250m
+    memory: 256Mi
+  limits:
+    cpu: "1"
+    memory: 512Mi
+```
+
+The reasoning, since a YAML dump teaches nothing:
+
+- **mini-order-backend CPU request 100m**: idle usage is tiny, and the HPA targets 70% of request, so a low-ish request means scaling kicks in early — which is what I want for a spiky order-processing API. The request is a floor for scheduling, not a prediction of peak.
+- **CPU limit 500m**: comfortably above the ~300m peak, so throttling shouldn't happen in normal operation, but a runaway loop can't eat a whole node.
+- **Memory 128Mi request / 256Mi limit**: peak was ~100Mi, so 256Mi gives real headroom. And I'll be honest about the request: the safer practice is **memory request = limit**. Memory doesn't compress — if the node can't actually give a pod the memory it bursts into, something gets killed. Setting request = limit means the scheduler reserved everything you might use, so a burst can never overcommit the node. If this were production I'd set both to 256Mi. On my three-node k3d cluster I kept the request at 128Mi so ten replicas of the HPA's max still fit — a dev-only compromise, and I'm naming it as one.
+- **Postgres gets a full core of limit** because throttling a database is misery (more on that below), and `Recreate`-strategy singletons don't get a second chance.
+
+One app-side change came out of this. Node doesn't reliably size its heap from the container's cgroup limit — it can happily try to grow past 256Mi and get OOMKilled by the kernel rather than doing its own GC harder first. So I pinned it, in the same container's `env` list in the Deployment:
+
+```yaml
+# k8s/mini-order-backend-deployment.yaml — add to the mini-order-backend container's env
+env:
+  - name: NODE_OPTIONS
+    value: "--max-old-space-size=192"
+```
+
+192Mi of heap inside a 256Mi limit, leaving room for buffers and the stack. I'm not certain this is the canonical formula — the guidance I found was all over the place — but "heap cap comfortably under the cgroup limit" is the shape everyone agrees on.
+
+## Breaking it on purpose, part 1: the loud failure
+
+Time to get killed deliberately. In `k8s/mini-order-backend-deployment.yaml` I dropped the memory limit to something Mini Order System can't live in (leave everything else in the `resources` block as is):
+
+```yaml
+# k8s/mini-order-backend-deployment.yaml — temporarily, for science
+limits:
+  memory: 64Mi
+```
+
+Rolled it out with `kubectl apply -f k8s/mini-order-backend-deployment.yaml`, started the k6 load, and within about forty seconds:
+
+```bash
+kubectl get pods -l app=mini-order-backend
+```
+
+```text
+NAME                         READY   STATUS      RESTARTS      AGE
+mini-order-backend-6f7b9d5c44-hm8tr   0/1     OOMKilled   2 (18s ago)   2m4s
+mini-order-backend-6f7b9d5c44-tp2vw   1/1     Running     1 (52s ago)   2m4s
+```
+
+That `RESTARTS` column climbing is your first tell. The autopsy lives in describe:
+
+```text
+$ kubectl describe pod mini-order-backend-6f7b9d5c44-hm8tr
+...
+    Last State:     Terminated
+      Reason:       OOMKilled
+      Exit Code:    137
+      Started:      Fri, 03 Jul 2026 11:42:19 +0530
+      Finished:     Fri, 03 Jul 2026 11:42:57 +0530
+    Restart Count:  2
+```
+
+Exit code 137 is 128 + signal 9 — SIGKILL. Not SIGTERM, no graceful anything: the kernel shot the process mid-request. Any in-flight order requests on that pod returned errors. Kubernetes then restarts the container (that's the Deployment's restart policy doing [what post 2 said it would](/blog/devops/2-how-kubernetes-thinks) — closing the gap between desired and actual state), the pod comes back, memory climbs again, dies again. If it dies fast enough you graduate to `CrashLoopBackOff`.
+
+The important lesson: **an OOMKilled pod is not a crash in your logs.** I grepped Mini Order System's logs for a stack trace for a good ten minutes before accepting there wasn't one. The process didn't exit; it was executed. `kubectl describe` is where the evidence lives, not `kubectl logs`.
+
+## Breaking it on purpose, part 2: the silent failure
+
+Now the sneaky one. Memory limit back to 256Mi, CPU limit down to `50m` — a sixth of what Mini Order System peaks at. Same k6 run.
+
+Nothing crashed. No events. No restarts. `kubectl get pods` shows two green `Running` pods, everything apparently fine. But the k6 summary:
+
+```text
+# with cpu limit 500m
+http_req_duration..: avg=9.2ms  p(95)=24ms
+
+# with cpu limit 50m
+http_req_duration..: avg=412ms  p(95)=1.9s   ✗ some requests timed out
+```
+
+p95 went from 24 milliseconds to nearly two seconds, and Kubernetes considers this working as intended. The container asked for CPU beyond its quota; the CFS scheduler made it wait its turn, 100ms window after 100ms window. The only place this shows up is a cgroup counter — you can see it from inside the pod:
+
+```bash
+$ kubectl exec deploy/mini-order-backend -- cat /sys/fs/cgroup/cpu.stat
+nr_throttled 8114
+throttled_usec 512883310
+```
+
+`nr_throttled 8114` — the container hit its quota ceiling eight thousand times during the test. Without metrics dashboards (we don't have those yet — [observability post](/blog/devops/13-logging-and-observability) is coming), this counter and your users' complaints are the only witnesses. This is the trap: memory failures page you, CPU failures gaslight you.
+
+This is also why CPU limits are genuinely controversial. A real camp of people — with solid production war stories — says don't set CPU limits at all: set honest requests, let pods burst into idle CPU, and rely on requests to guarantee everyone's fair share under contention (the CFS gives contended CPU out proportionally to requests). The counter-camp wants limits for predictability and multi-tenant fairness. I'm keeping limits on Mini Order System because on a shared learning cluster I'd rather cap a runaway loop than maximize burst — but I hold that opinion loosely, and if you drop CPU limits in production you're in respectable company. Memory limits are not controversial. Always set memory limits.
+
+## Breaking it on purpose, part 3: the pod that never starts
+
+One more failure mode, this one from requests. I set the CPU *request* to `2` — two full cores — and bumped replicas. My k3d agents don't have that to promise:
+
+```bash
+$ kubectl get pods -l app=mini-order-backend
+NAME                         READY   STATUS    RESTARTS   AGE
+mini-order-backend-5c8d7f9b6b-qq4jn   0/1     Pending   0          3m11s
+```
+
+`Pending`, forever. Describe tells you why in the Events:
+
+```text
+Events:
+  Type     Reason            Message
+  ----     ------            -------
+  Warning  FailedScheduling  0/3 nodes are available: 3 Insufficient cpu.
+                             preemption: 0/3 nodes are available:
+                             3 No preemption victims found for incoming pod.
+```
+
+Remember: this is bookkeeping, not usage. My nodes were nearly idle — actual CPU consumption maybe 5% — but the *sum of requests* on each node couldn't fit another 2-core promise. This is the exact same `Pending` shape as the PVC binding confusion from [the storage post](/blog/devops/7-persistent-storage-pvs-pvcs): the pod isn't broken, it's waiting for a promise the cluster can't keep. Over-requesting wastes real capacity; a cluster can be "full" of requests while its CPUs sit cold. At scale this is money — nodes you're paying for that the scheduler considers spoken for.
+
+## What still doesn't work
+
+Numbers are set, guardrails are real, and I can now tell an OOMKill from a throttle from a scheduling failure. But there's a gap that's been nagging me since the rolling-update experiments in [the scaling post](/blog/devops/6-multi-replica-scaling): during a rollout, Kubernetes sends traffic to a new pod as soon as the container starts — not when Mini Order System has actually opened its database pool and is ready to answer. A pod that boots slowly, or comes up with a broken DB connection, still receives requests and fails them. Resource limits don't protect you from *unhealthy* pods, only hungry ones. Fixing that is the job of liveness and readiness probes, and it gets its own post — [health checks](/blog/devops/12-health-checks-probes) — because there's a famous way to get them wrong that takes your whole deployment down.
+
+Also still true: no metrics dashboards, so CPU throttling remains effectively invisible unless I go spelunking in `/sys/fs/cgroup`. That itch gets scratched in the [observability post](/blog/devops/13-logging-and-observability).
+
+Next up first, though: Mini Order System is still only reachable through `kubectl port-forward`, which is ridiculous for an order system. Time to open the front door — [Ingress, routing, and TLS](/blog/devops/11-ingress-routing-tls).
