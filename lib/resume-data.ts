@@ -48,7 +48,7 @@ export const resumeWorkExperience: WorkExperienceItem[] = [
     location: "Remote",
     period: "Jun 2026 - Present",
     points: [
-      "• Lead Product Engineer for Taolatt Real Estate CRM, shipping 23 full-stack features from backend APIs to React interfaces while defining engineering standards that scaled the platform.",
+      "• Fully owned Taolatt Real Estate CRM, shipping 23 full-stack features from backend APIs to React interfaces while defining engineering standards that scaled the platform.",
       "• Built a reusable React component library with shadcn/ui, React Hook Form, and Zod, supporting scalable state management, filtering, infinite scroll, and multi-select workflows.",
       "• Integrated messaging and booking services, delivering WhatsApp/email workflows with deduplication, idempotent retries, and real-time calendar synchronization via webhooks.",
     ],
