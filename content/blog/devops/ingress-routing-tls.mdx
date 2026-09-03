@@ -1,0 +1,268 @@
+---
+title: "11. Ingress: Giving Mini Order System a Real Front Door"
+publishDate: "03 September 2026"
+slug: "devops/11-ingress-routing-tls"
+description: "Retiring kubectl port-forward for good: installing ingress-nginx, understanding why an Ingress object does nothing by itself, routing mini-order.local through the cluster, and adding TLS with mkcert."
+tags: ["kubernetes", "devops", "ingress", "nginx", "tls", "series"]
+---
+
+Eleven posts in, and I have a confession: every single time I've shown you Mini Order System responding to a request, there's been a `kubectl port-forward` running in another terminal. Every time. It dies when my laptop sleeps. It forwards to *one pod*, quietly ignoring the load balancing we built in [the multi-replica post](/blog/devops/6-multi-replica-scaling). And it requires cluster credentials, which means it is not, in any sense, how users reach an application.
+
+Port-forward is a debugging tool. I've been using it as a front door. Time to fix that.
+
+## The goal
+
+By the end of this post, `http://mini-order.local:8080` hits the cluster, gets routed by hostname to the `mini-order-backend` Service, and spreads across all our replicas — no port-forward, no kubectl. Then we put TLS on it, because it's 2026 and even local dev should look like production.
+
+## Why the Service types we have aren't enough
+
+Back in [the networking post](/blog/devops/5-kubernetes-networking-services-dns) I covered the three Service types. Quick recap of why none of them solve this properly:
+
+- **ClusterIP** (what `mini-order-backend` is) — only reachable inside the cluster. Hence all the port-forwarding.
+- **NodePort** — opens a high port (30000-something) on every node. Works, but now you're telling people to visit `mini-order.local:31742`, and you get exactly one port per Service. Ten services, ten weird ports.
+- **LoadBalancer** — in the cloud, this provisions an actual load balancer. One per Service. At real cloud prices, that's ~$20/month *per service* just for the entry point. Nobody does one LB per service.
+
+What you actually want is **one** entry point that looks at the incoming request — the hostname, the path — and routes it to the right Service. HTTP-aware routing, at layer 7. That's what Ingress is for.
+
+## The concept: Ingress is a rule, not a router
+
+Here's the thing that confused me for an embarrassingly long time, so I'll say it as bluntly as possible:
+
+**An Ingress object does nothing. It's a row in a database.**
+
+You can `kubectl apply` a beautiful Ingress with hosts and paths and TLS blocks, and Kubernetes will store it, and show it to you in `kubectl get ingress`, and absolutely no traffic will move. Because an Ingress is just a *routing rule* — a declarative statement of "requests for this host and path should go to that Service."
+
+The thing that actually moves traffic is an **ingress controller**: a real proxy (nginx, Traefik, HAProxy, Envoy…) running as pods in your cluster, watching the API server for Ingress objects and rewriting its own config to match them. Rule and enforcer are two separate things, and Kubernetes ships with neither wired together by default on most clusters.
+
+This maps exactly onto the desired-state model from [How Kubernetes Actually Thinks](/blog/devops/2-how-kubernetes-thinks): the Ingress is desired state, the controller is the control loop making it real. Once that clicked, the whole feature stopped being mysterious.
+
+It also explains a decision I made all the way back in [post 04](/blog/devops/4-kubernetes-running-locally) and promised to justify later: we created the cluster with `--k3s-arg "--disable=traefik@server:0"`. k3s *bundles* Traefik as its ingress controller, and it works fine. But I wanted to install a controller myself, on purpose, and understand every piece — and I wanted nginx specifically, because ingress-nginx is what I keep running into on real clusters at work. Getting a pre-installed controller for free teaches you nothing about what a controller *is*.
+
+## Installing ingress-nginx
+
+This is the series' first real Helm moment. I've avoided Helm so far — raw YAML forces you to actually read what you're deploying — but ingress-nginx is a controller Deployment, a Service, RBAC roles, admission webhooks, and an IngressClass. Hand-writing that is not learning, it's typing. So:
+
+```bash
+helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
+helm repo update
+helm install ingress-nginx ingress-nginx/ingress-nginx \
+  --namespace ingress-nginx --create-namespace
+```
+
+(We'll talk properly about Helm vs plain YAML in [the multi-environment post](/blog/devops/14-multi-environment-kustomize). Short version: I'm fine using Helm for *other people's* complex software, and I'm not ready to template our own YAML yet.)
+
+Check what landed:
+
+```bash
+kubectl get pods,svc -n ingress-nginx
+```
+
+```text
+NAME                                            READY   STATUS    RESTARTS   AGE
+pod/ingress-nginx-controller-7d56585cd9-x8k2m   1/1     Running   0          45s
+
+NAME                                         TYPE           CLUSTER-IP      EXTERNAL-IP   PORT(S)                      AGE
+service/ingress-nginx-controller             LoadBalancer   10.43.112.7     172.19.0.3    80:31856/TCP,443:32011/TCP   45s
+service/ingress-nginx-controller-admission   ClusterIP      10.43.201.44    <none>        443/TCP                      45s
+```
+
+The interesting line: the controller exposes itself as a **LoadBalancer** Service — and it actually got an external IP, on a local cluster. That's k3s's built-in `svclb` (Klipper) doing its thing: it fakes a cloud load balancer by binding the Service's ports on the nodes. And then k3d's own loadbalancer container — the thing we configured with `--port "8080:80@loadbalancer"` when we created the cluster — forwards port 8080 on my laptop to port 80 inside the cluster.
+
+So the chain is: `localhost:8080` → k3d loadbalancer → nginx controller Service → nginx pod → (routing decision) → `mini-order-backend` Service → one of our app pods. Yes, that's a lot of hops for localhost. Every one of them is standing in for something real: in the cloud, the first two hops are your cloud provider's load balancer.
+
+Note the LoadBalancer thing resolves an earlier mystery too — this is why "one LoadBalancer per service is expensive" stops mattering. You buy *one* LoadBalancer for the ingress controller, and every service in the cluster shares it through routing rules.
+
+## The Ingress itself
+
+Here's the routing rule for Mini Order System:
+
+```yaml
+# ingress.yaml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: mini-order
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: mini-order.local
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: mini-order-backend
+                port:
+                  number: 8000
+```
+
+Reading it bottom-up: requests for host `mini-order.local`, any path (`/` with `Prefix` matches everything), go to the `mini-order-backend` Service on port 8000 — the same ClusterIP Service we've had since post 04. The Ingress doesn't bypass the Service; it routes *to* it, and the Service still spreads traffic across pods like it always has.
+
+`pathType: Prefix` deserves one sentence because the alternative bit me in a previous life: `Exact` matches only the literal path, and `ImplementationSpecific` means "whatever the controller feels like," which is a fun thing to discover during an incident. Use `Prefix` unless you have a specific reason not to.
+
+Since `mini-order.local` isn't a real domain, my laptop needs to be told where it lives:
+
+```bash
+echo "127.0.0.1 mini-order.local" | sudo tee -a /etc/hosts
+```
+
+Apply, curl, done. Right?
+
+## The 404 that taught me about IngressClass
+
+Not done. My first version of that YAML did not have the `ingressClassName` line, because the blog post I was cribbing the structure from predates it mattering. Applied cleanly. And then:
+
+```bash
+curl -i http://mini-order.local:8080/
+```
+
+```text
+HTTP/1.1 404 Not Found
+Content-Type: text/html
+Content-Length: 146
+
+<html>
+<head><title>404 Not Found</title></head>
+<body>
+<center><h1>404 Not Found</h1></center>
+<hr><center>nginx</center>
+</body>
+</html>
+```
+
+That `<center>nginx</center>` footer is important evidence: the request *reached the controller*. nginx answered. It just had no idea what `mini-order.local` was, so it served its default backend. The routing rule I'd applied thirty seconds earlier had simply… not been picked up.
+
+`kubectl describe` showed the tell:
+
+```bash
+kubectl get ingress mini-order
+```
+
+```text
+NAME    CLASS    HOSTS         ADDRESS   PORTS   AGE
+mini-order   <none>   mini-order.local             80      2m
+```
+
+`CLASS: <none>`, and the `ADDRESS` column empty — meaning no controller had claimed this Ingress. Here's the model: a cluster can run *multiple* ingress controllers (internal traffic through one, public through another — genuinely common). So every Ingress declares which controller it belongs to via `ingressClassName`, and controllers only act on Ingresses of their class. An Ingress with no class and no cluster-wide default gets adopted by nobody. It's valid, stored, and completely inert — the "Ingress is just a row in a database" thing, demonstrated live.
+
+Added `ingressClassName: nginx`, re-applied, and within seconds:
+
+```text
+NAME    CLASS   HOSTS         ADDRESS      PORTS   AGE
+mini-order   nginx   mini-order.local   172.19.0.3   80      4m
+```
+
+```bash
+curl -i http://mini-order.local:8080/healthz
+```
+
+```text
+HTTP/1.1 200 OK
+Content-Type: application/json; charset=utf-8
+
+{"status":"ok"}
+```
+
+Twenty minutes on a missing line. At least the failure mode is now burned into my brain: **404 with an nginx footer + empty ADDRESS column = no controller claimed your Ingress.**
+
+## End to end: the full path
+
+No app changes were needed for any of this, which is the payoff of Mini Order System being a well-behaved stateless HTTP service. Prove the whole chain with the actual product — create an order through the ingress, then look up its status:
+
+```bash
+curl -i -X POST http://mini-order.local:8080/orders \
+  -H 'Content-Type: application/json' \
+  -d '{"customerId": "customer-42", "items": [{"sku": "coffee-beans", "quantity": 2}]}'
+```
+
+```text
+HTTP/1.1 201 Created
+Content-Type: application/json
+
+{"id":"ord_7f3a2c","status":"pending"}
+```
+
+```bash
+curl -i http://mini-order.local:8080/orders/ord_7f3a2c
+```
+
+```text
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+{"id":"ord_7f3a2c","status":"pending"}
+```
+
+And to confirm we're actually load balancing (unlike port-forward, which pins to one pod), hammer it and watch logs across all replicas:
+
+```bash
+hey -n 200 -c 10 http://mini-order.local:8080/orders/ord_7f3a2c
+kubectl logs -l app=mini-order-backend --prefix --tail=5
+```
+
+The `--prefix` flag stamps each line with the pod name, and all three pods show traffic. One hostname in, three pods out. That's the whole feature.
+
+## TLS, because http:// should feel wrong
+
+The TLS story on an Ingress is pleasantly simple: put a certificate in a Secret, reference it from the Ingress, and the controller terminates TLS at the edge. Traffic from nginx to your pods stays plain HTTP inside the cluster (fine for now; "mesh mTLS" is a different series).
+
+For a local cert that browsers actually trust, `mkcert` is the good tool. It creates a local CA, installs it into your system trust store, and mints certs from it:
+
+```bash
+mkcert -install
+mkcert mini-order.local
+```
+
+That produces `mini-order.local.pem` and `mini-order.local-key.pem`. Into the cluster as a TLS-typed Secret (same Secret machinery as [the config post](/blog/devops/8-configmaps-and-secrets), different type):
+
+```bash
+kubectl create secret tls mini-order-tls \
+  --cert=mini-order.local.pem --key=mini-order.local-key.pem
+```
+
+Then add the `tls` block to the Ingress:
+
+```yaml
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts:
+        - mini-order.local
+      secretName: mini-order-tls
+  rules:
+    # ...unchanged
+```
+
+One snag, and it's a k3d one: HTTPS arrives on port 443, and when we created the cluster we only mapped `8080:80`. There's no path from my laptop to the controller's 443. Ten months ago I'd have assumed I needed to recreate the cluster; turns out k3d can edit port mappings live:
+
+```bash
+k3d cluster edit mini-order --port-add "8443:443@loadbalancer"
+```
+
+And now:
+
+```bash
+curl -v https://mini-order.local:8443/healthz 2>&1 | grep -E "subject|issuer|HTTP"
+```
+
+```text
+*  subject: O=mkcert development certificate; OU=aman@lab
+*  issuer: O=mkcert development CA; OU=aman@lab
+< HTTP/2 200
+```
+
+Real certificate, trusted locally, HTTP/2 for free because nginx negotiates it once TLS is on. The browser shows the padlock at `https://mini-order.local:8443`. It is, I admit, a completely artificial padlock — but the *plumbing* is identical to production.
+
+For actual production: you don't hand-mint certs and `kubectl create secret` them. You install **cert-manager**, point it at Let's Encrypt, and it provisions and renews certificates automatically based on annotations on your Ingress. Same Secret, same `tls:` block — just a robot filling it in. I'm not implementing it here because it needs a real domain and a reachable cluster, and we have neither. It's on the list for whenever this series graduates to a cloud cluster.
+
+## What still doesn't work
+
+- **The TLS is local-only theater.** mkcert's CA lives in my laptop's trust store and nowhere else. The moment this runs anywhere real, it's cert-manager + Let's Encrypt or bust.
+- **No rate limiting or WAF-anything.** An order API's creation and status routes are exactly the kind of endpoints that get hammered. ingress-nginx has rate-limit annotations; I haven't touched them.
+- **Rollouts can still serve errors through the ingress.** During a rolling update, nginx happily sends traffic to pods that have *started* but aren't actually ready to serve — the ingress routes to the Service, and the Service currently trusts any running pod. I watched a handful of connection-refused blips during a deploy while writing this. The fix is readiness probes, and it's overdue.
+- **`mini-order.local` in /etc/hosts** is a per-machine hack. Fine for one dev; it doesn't survive contact with a second one.
+
+## Next up
+
+Those rollout blips are the thread to pull. Kubernetes has a whole probe system — liveness, readiness, startup — for telling the cluster "this pod is alive" vs "this pod is ready for traffic," and we're running with none of it. Next post: [health checks and probes](/blog/devops/12-health-checks-probes), including the classic self-inflicted outage where a liveness probe checks the database and takes the whole app down with it.
