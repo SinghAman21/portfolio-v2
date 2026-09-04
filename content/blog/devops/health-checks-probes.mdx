@@ -1,0 +1,234 @@
+---
+title: "12. Health Checks: Liveness, Readiness, and the Probe That Took Down Everything"
+publishDate: "04 September 2026"
+slug: "devops/12-health-checks-probes"
+description: "Mini Order System was throwing 502s during every rollout because Kubernetes sent traffic to pods that weren't ready. Fixing it meant learning what liveness and readiness probes actually do — and how putting a DB check in the wrong one turns a database blip into a full outage."
+tags: ["kubernetes", "devops", "probes", "liveness", "readiness", "reliability", "series"]
+---
+
+I found this one by accident. At the end of [the Ingress post](/blog/devops/11-ingress-routing-tls) I had `hey` running against `https://mini-order.local/orders/ord_7f3a2c` to check that TLS termination wasn't adding meaningful latency. Mid-test, I got bored and ran `kubectl rollout restart deployment/mini-order-backend` in another terminal, because I'd just changed a ConfigMap value and [env vars don't hot-reload](/blog/devops/8-configmaps-and-secrets).
+
+The `hey` summary came back:
+
+```text
+Status code distribution:
+  [200] 4923 responses
+  [502] 61 responses
+  [500] 16 responses
+```
+
+Sixty-one 502s and sixteen 500s, during a *rolling* update. The whole point of rolling updates — the thing I was so pleased about in [the multi-replica post](/blog/devops/6-multi-replica-scaling) — is that users never notice a deploy. Mine were noticing. Every single deploy of Mini Order System was dropping requests, and I'd just never had load running at the exact moment I deployed before.
+
+This post is about fixing that with probes. It's also about the mistake I made on my first attempt, which turned a 30-second Postgres restart into a total outage of every Mini Order System pod at once. That mistake is common enough to have a shape, and I want you to recognize it before you make it.
+
+## What's actually happening during those 502s
+
+Here's the timeline of one new pod during a rolling update, with no probes configured:
+
+1. Kubernetes starts the new pod. The container process launches.
+2. The moment the container is running, Kubernetes considers the pod **Ready**.
+3. Ready pods get added to the Service's EndpointSlices — the list of real pod IPs that traffic actually goes to (covered in [the networking post](/blog/devops/5-kubernetes-networking-services-dns)).
+4. ingress-nginx sees the new endpoint and starts sending it requests. Immediately.
+
+The problem is step 2. "The container is running" means the Node process exists. It does *not* mean Express has bound port 8000, and it definitely doesn't mean the `pg` connection pool has established a connection to Postgres. For Mini Order System there's a window of about one to two seconds where the process is up but not actually able to serve.
+
+Requests that arrive before Express is listening get connection-refused, which ingress-nginx reports as a 502. Requests that sneak in after Express binds but before the pool has a live connection hit our order handler, the query fails, and we return a 500 ourselves. That's the 61/16 split in the `hey` output — two different failure windows, same root cause.
+
+Kubernetes has no idea any of this is happening. It asked "is the container running?" and the answer was yes. If you want it to ask a better question, you have to define the question. That's what probes are.
+
+## The three probes answer three different questions
+
+This is the mental model that took me embarrassingly long to get, because the words "liveness" and "readiness" sound like synonyms. They are not, and Kubernetes reacts completely differently to each one failing:
+
+- **Readiness probe** — *"Should this pod receive traffic right now?"* Fail → the pod is removed from the Service's EndpointSlices. Nothing is restarted. Nothing is killed. The pod just stops getting requests until the probe passes again. It's a traffic gate.
+- **Liveness probe** — *"Is this process beyond saving?"* Fail (repeatedly) → the kubelet **kills the container and restarts it**. This is the nuclear option. It exists for genuinely wedged processes: deadlocks, event loops that stopped looping, that kind of thing.
+- **Startup probe** — *"Has this container finished booting yet?"* While it's failing, the other two probes are suspended. It exists so slow-starting apps don't get liveness-killed before they've even finished initializing. Mini Order System boots in about a second, so I don't use one — but if you're running a JVM app that takes 90 seconds to warm up, this is how you avoid a restart loop at boot.
+
+The key asymmetry: **readiness failure is recoverable and cheap; liveness failure is destructive.** A pod can flap in and out of readiness all day and the worst case is reduced capacity. A pod that fails liveness gets executed.
+
+Which leads directly to the rule this whole post orbits: *a probe should only check things the pod itself can fix by restarting.* Hold that thought — I violated it first, so you can watch what happens.
+
+## Wiring the endpoints into Mini Order System
+
+The app needs two HTTP endpoints. Here's what went into `server.js`, and the shape matters more than the code:
+
+```js
+// Liveness: deliberately dumb. If Express can answer this,
+// the process is alive. That is the ONLY question it answers.
+app.get('/healthz', (req, res) => {
+  res.status(200).json({ status: 'ok' });
+});
+
+// Readiness: can this pod actually do its job right now?
+// For Mini Order System that means "can I reach Postgres."
+app.get('/readyz', async (req, res) => {
+  try {
+    await Promise.race([
+      pool.query('SELECT 1'),
+      new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('readyz timeout')), 2000)
+      ),
+    ]);
+    res.status(200).json({ status: 'ready' });
+  } catch (err) {
+    res.status(503).json({ status: 'not ready', error: err.message });
+  }
+});
+```
+
+Two things I got wrong before getting them right:
+
+The `/healthz` handler returning 200 unconditionally felt lazy, almost wrong. Shouldn't a health check *check* something? No — and that instinct is exactly the trap. If the process can run this handler, the event loop is alive and Express is serving. That's the complete definition of "alive" for a Node app. Anything more belongs in readiness.
+
+The timeout on `/readyz` is not optional. My first version was just `await pool.query('SELECT 1')`. When Postgres is unreachable, `pg` can sit waiting on a connection for longer than the probe's own timeout, and then you're debugging why the probe result doesn't match what the endpoint returns when you curl it. Racing a 2-second timeout keeps the endpoint's behavior predictable.
+
+Rebuild, retag, import — same loop as always:
+
+```bash
+docker build -t mini-order-backend:v3 .
+k3d image import mini-order-backend:v3 -c mini-order
+```
+
+## The probe YAML — and my first, wrong version
+
+Here's what I wrote first. It looks reasonable. It is a landmine:
+
+```yaml
+# DON'T copy this one. This is the broken version.
+livenessProbe:
+  httpGet:
+    path: /readyz        # <-- the mistake. DB check in a liveness probe.
+    port: 3000
+  initialDelaySeconds: 5
+  periodSeconds: 10
+  failureThreshold: 3
+```
+
+My reasoning at the time: "a pod that can't reach the database is unhealthy, so the health check should check the database." Sounds airtight. Deployed it, everything green, moved on.
+
+Then I ran the experiment I'd planned for the "break it on purpose" section of this post, and it broke much harder than intended.
+
+## Breaking it: the self-inflicted outage
+
+The test: make Postgres disappear briefly, as if it were restarting or having a moment.
+
+```bash
+kubectl scale deployment/postgres --replicas=0
+```
+
+Watch what happens to the *API* pods — which, remember, are perfectly fine. Their process is healthy. Only their dependency is down:
+
+```bash
+kubectl get pods -w
+```
+
+```text
+NAME                         READY   STATUS    RESTARTS      AGE
+mini-order-backend-7d9f8b6c54-2xkqv   1/1     Running   1 (18s ago)   3m
+mini-order-backend-7d9f8b6c54-8njws   1/1     Running   1 (11s ago)   3m
+mini-order-backend-7d9f8b6c54-tw4mm   1/1     Running   2 (9s ago)    3m
+...
+mini-order-backend-7d9f8b6c54-2xkqv   1/1     Running   3 (5s ago)    5m
+mini-order-backend-7d9f8b6c54-8njws   0/1     CrashLoopBackOff   3 (2s ago)    5m
+mini-order-backend-7d9f8b6c54-tw4mm   0/1     CrashLoopBackOff   4 (1s ago)    5m
+```
+
+Every pod fails the DB check three times, gets liveness-killed, restarts, comes up, fails three more times, gets killed again — and because they all see the same dead Postgres, they all die **together**. Within a couple of minutes all three are in `CrashLoopBackOff` with the restart delay climbing toward five minutes. The events spell it out:
+
+```text
+Warning  Unhealthy  2m (x9 over 4m)   kubelet  Liveness probe failed: HTTP probe failed with statuscode: 503
+Normal   Killing    2m (x3 over 4m)   kubelet  Container mini-order-backend failed liveness probe, will be restarted
+Warning  BackOff    30s (x8 over 2m)  kubelet  Back-off restarting failed container
+```
+
+Now bring Postgres back — `kubectl scale deployment/postgres --replicas=1` — and here's the truly maddening part: Mini Order System *stays down*. The pods are stuck in back-off, waiting out delays that doubled with every restart. Postgres was "down" for ninety seconds; Mini Order System was down for closer to six minutes.
+
+Think about what restarting accomplished here: nothing. The Node process was never the problem. Restarting it cannot fix Postgres. I had encoded "if the database blips, execute every API pod simultaneously and keep executing them" into my Deployment. A partial dependency failure became a total outage, *caused by the health check*.
+
+This is the rule from earlier, learned the loud way: **liveness probes must only check what a restart can fix.** A restart fixes a wedged process. A restart does not fix your database, your upstream API, or DNS. Dependencies belong in readiness, where the punishment is "stop sending this pod traffic" — which is exactly the correct response.
+
+## The fixed version
+
+```yaml
+containers:
+  - name: mini-order-backend
+    image: mini-order-backend:v3
+    ports:
+      - containerPort: 3000
+    livenessProbe:
+      httpGet:
+        path: /healthz     # process alive? nothing else.
+        port: 3000
+      initialDelaySeconds: 5
+      periodSeconds: 10
+      timeoutSeconds: 2
+      failureThreshold: 3
+    readinessProbe:
+      httpGet:
+        path: /readyz      # can I reach Postgres?
+        port: 3000
+      initialDelaySeconds: 3
+      periodSeconds: 5
+      timeoutSeconds: 3
+      failureThreshold: 2
+```
+
+The tuning numbers are trade-offs, not magic:
+
+- `periodSeconds: 5` on readiness means a broken pod takes up to ~10 seconds (two failed probes) to leave the endpoint list. Lower is faster detection but more `SELECT 1` chatter; at 3 replicas it's noise, at 200 replicas it's a measurable query load on Postgres.
+- `failureThreshold: 3` on liveness with `periodSeconds: 10` means a genuinely wedged process survives up to 30 seconds before restart. I'd rather restart slow than restart spuriously — a liveness probe that fires on a transient event-loop stall during load is worse than none.
+- `initialDelaySeconds` is honestly a bit vestigial once you have a readiness probe (the pod gets no traffic until ready anyway), but it stops the very first probe from racing Express's startup and polluting the events log with one scary-looking failure.
+
+Rerun the Postgres-outage experiment with this config and the behavior is night and day:
+
+```text
+NAME                         READY   STATUS    RESTARTS   AGE
+mini-order-backend-6c8d5f9b77-4mzpn   0/1     Running   0          8m
+mini-order-backend-6c8d5f9b77-9qkxw   0/1     Running   0          8m
+mini-order-backend-6c8d5f9b77-fj2lt   0/1     Running   0          8m
+```
+
+`0/1` but `Running`, zero restarts. The pods are alive, patiently failing readiness, receiving no traffic. Ingress returns 503s (honest — we genuinely can't serve without the DB). Scale Postgres back up and all three flip to `1/1` within one probe period, about five seconds. No back-off, no cascade, no six-minute hangover.
+
+## The actual test: rollouts under load
+
+Back to the original problem. `hey` in one terminal:
+
+```bash
+hey -z 60s -c 20 https://mini-order.local/orders/ord_7f3a2c
+```
+
+Rollout in the other:
+
+```bash
+kubectl rollout restart deployment/mini-order-backend
+```
+
+```text
+Status code distribution:
+  [200] 5177 responses
+```
+
+Every status lookup response a 200. New pods now sit outside the endpoint list until `/readyz` passes — meaning Express is up *and* the pool has a live connection — and only then does traffic arrive. The rolling update finally delivers what it advertised.
+
+One more piece makes rollouts fully clean: the shutdown side. When Kubernetes terminates a pod it sends SIGTERM, waits `terminationGracePeriodSeconds` (default 30), then SIGKILLs. Node ignores SIGTERM by default, which means in-flight requests get severed. The fix is a few lines:
+
+```js
+process.on('SIGTERM', () => {
+  server.close(() => {
+    pool.end().then(() => process.exit(0));
+  });
+});
+```
+
+Stop accepting new connections, let in-flight requests finish, drain the pool, exit. There's a subtle race here — endpoint removal and SIGTERM happen roughly concurrently, so a request can still land just after SIGTERM arrives — and the common mitigation is a small pre-shutdown sleep. I'm not doing that yet; at Mini Order System's traffic level the race window has never bitten in testing. Noting it honestly as a corner I've deliberately left uncut-and-unpolished.
+
+## What still doesn't work
+
+The probes tell Kubernetes *when* something is wrong. They tell me nothing about *why*. During the CrashLoopBackOff disaster above, my debugging loop was `kubectl logs --previous` on individual pods, one at a time, racing the restarts — and once a pod is replaced, its logs are just gone. I can see that a pod died; reconstructing what it saw in its final seconds is archaeology.
+
+Also still true: `/readyz` only checks Postgres. If Mini Order System ever grows a second dependency (a cache, say), the readiness definition needs revisiting — and there's a real design question about whether a pod should report unready because a *non-critical* dependency is down. Today the answer is simple because the dependency graph is one edge long.
+
+## Next up
+
+Making the *why* visible: structured logging with pino, and shipping logs somewhere that survives pod restarts — Loki, Alloy, and Grafana. That's [logging and observability](/blog/devops/13-logging-and-observability), where the `--previous` archaeology finally stops.
