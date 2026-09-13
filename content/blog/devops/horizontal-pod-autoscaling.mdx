@@ -225,9 +225,11 @@ mini-order-backend   Deployment/mini-order-backend   cpu: 52%/70%   2        10 
 mini-order-backend   Deployment/mini-order-backend   cpu: 68%/70%   2        10       8
 ```
 
-![kubectl get hpa mini-order-backend watch output stepping from 2 to 5 to 8 replicas as the TARGETS column climbs past 70 percent under k6 load](/blog/devops/9-horizontal-pod-autoscaling/hpa-scaling-up.png "The whole control loop happening live: CPU crosses target, replicas jump to match")
+![kubectl get hpa mini-order-backend watch output stepping from 2 to 5 to 8 replicas as the TARGETS column climbs past 70 percent under k6 load](/hpa-scaling-up.png "The whole control loop happening live: CPU crosses target, replicas jump to match")
 
 Read that third-to-fourth line again: CPU hit 158% of request, and the controller computed `ceil(2 × 158/70) = 5` and jumped straight to 5 replicas. Not one at a time — straight to the count the formula says. Then another correction to 8 as load kept climbing. During the sustained phase it hovered at 8 pods, average CPU orbiting the 70% target. The k6 summary on the other side: p95 order request latency stayed under 25ms through the whole spike. With fixed `replicas: 3`, the same test had p95 north of 800ms.
+
+Reference implementation issue: [distributed-order-system#14](https://github.com/SinghAman21/distributed-order-system/issues/14).
 
 `kubectl describe hpa mini-order-backend` shows the decisions as events, which is the first place to look when scaling does something you don't expect:
 
