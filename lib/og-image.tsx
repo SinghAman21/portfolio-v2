@@ -131,16 +131,6 @@ export async function createPortfolioOgImage({
             >
               {title}
             </div>
-            <div
-              style={{
-                width: Math.max(16, Math.round(titleSize * 0.25)),
-                height: Math.max(54, Math.round(titleSize * 0.92)),
-                background: "#22C55E",
-                boxShadow: "0 0 24px rgba(34,197,94,0.55)",
-                transform: "translateY(6px)",
-                flexShrink: 0,
-              }}
-            />
           </div>
           <div
             style={{

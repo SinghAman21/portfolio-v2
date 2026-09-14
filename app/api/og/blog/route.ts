@@ -19,7 +19,7 @@ export async function GET(request: Request) {
 
   return createPortfolioOgImage({
     title: post.title,
-    subtitle: "Aman Singh · Blog",
+    // subtitle: "Aman Singh · Blog",
     footer: "technical notes and build logs",
   });
 }
