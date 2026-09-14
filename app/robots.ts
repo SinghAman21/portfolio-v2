@@ -13,6 +13,7 @@ export default function robots(): MetadataRoute.Robots {
         "/resume",
         "/rss",
         "/about",
+        "/reach",
       ],
       disallow: [],
     },

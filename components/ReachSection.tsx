@@ -3,12 +3,13 @@ import AnimatedSection from '@/components/AnimatedSection';
 
 interface ReachSectionProps {
   animationDelay?: string;
+  showTitle?: boolean;
 }
 
-export default function ReachSection({ animationDelay = '1.2s' }: ReachSectionProps) {
+export default function ReachSection({ animationDelay = '1.2s', showTitle = true }: ReachSectionProps) {
   return (
     <AnimatedSection delay={animationDelay} className="mt-12">
-      <h2 className="text-lg font-serif font-semibold text-gray-900 dark:text-neutral-100">reach</h2>
+      {showTitle && <h2 className="text-lg font-serif font-semibold text-gray-900 dark:text-neutral-100">reach</h2>}
       <div className="mt-2 flex flex-wrap gap-2">
         <span className="whitespace-nowrap text-gray-700 dark:text-neutral-400">
           <span>connect on </span>

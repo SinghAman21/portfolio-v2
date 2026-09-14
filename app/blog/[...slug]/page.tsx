@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { notFound, unstable_rethrow } from "next/navigation";
 import { getAllPosts, getPostBySlug, getAdjacentPosts } from "@/lib/mdx";
 import { extractToc } from "@/lib/toc";
@@ -11,7 +12,7 @@ export async function generateMetadata({
   params,
 }: {
   params: Promise<{ slug: string[] }>;
-}) {
+}): Promise<Metadata> {
   const { slug } = await params;
   try {
     const slugPath = slug.join("/");
@@ -23,6 +24,8 @@ export async function generateMetadata({
       };
     }
 
+    const ogImage = `/api/og/blog?slug=${encodeURIComponent(slugPath)}`;
+
     return {
       title: `${post.title} | Aman Singh`,
       description: post.excerpt,
@@ -30,7 +33,14 @@ export async function generateMetadata({
         title: `${post.title} | Aman Singh`,
         description: post.excerpt,
         url: `https://singhaman.me/blog/${slugPath}`,
-        images: ["/og-image.webp"],
+        images: [
+          {
+            url: ogImage,
+            width: 1200,
+            height: 630,
+            alt: `${post.title} — Aman Singh`,
+          },
+        ],
         siteName: "Aman Singh",
         locale: "en_US",
         type: "article",
@@ -38,7 +48,7 @@ export async function generateMetadata({
       twitter: {
         title: `${post.title} | Aman Singh`,
         card: "summary_large_image",
-        images: ["/og-image.jpg"],
+        images: [ogImage],
         description: post.excerpt,
       },
     };
@@ -85,6 +95,7 @@ export default async function BlogPost({
     const isoDate = isNaN(parsedDate.getTime())
       ? undefined
       : parsedDate.toISOString();
+    const ogImageUrl = `https://singhaman.me/api/og/blog?slug=${encodeURIComponent(slugPath)}`;
     const jsonLd = {
       "@context": "https://schema.org",
       "@type": "BlogPosting",
@@ -92,7 +103,7 @@ export default async function BlogPost({
       description: post.excerpt,
       url: `https://singhaman.me/blog/${slugPath}`,
       mainEntityOfPage: `https://singhaman.me/blog/${slugPath}`,
-      image: "https://singhaman.me/og-image.webp",
+      image: ogImageUrl,
       ...(isoDate ? { datePublished: isoDate, dateModified: isoDate } : {}),
       author: {
         "@type": "Person",
