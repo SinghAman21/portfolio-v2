@@ -23,7 +23,7 @@ interface PortfolioOgImageOptions {
   site?: string;
 }
 
-export async function createPortfolioOgImage({
+export async function createBlogsOgImage({
   title,
   subtitle = "Backend · Infrastructure · Full-Stack",
   footer = "building scalable systems",

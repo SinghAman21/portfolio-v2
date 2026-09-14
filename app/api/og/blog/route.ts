@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 
 import { getPostBySlug } from "@/lib/mdx";
-import { createPortfolioOgImage } from "@/lib/og-image";
+import { createBlogsOgImage } from "@/lib/blog-og-image";
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -17,9 +17,9 @@ export async function GET(request: Request) {
     notFound();
   }
 
-  return createPortfolioOgImage({
+  return createBlogsOgImage({
     title: post.title,
-    // subtitle: "Aman Singh · Blog",
+    subtitle: "",
     footer: "technical notes and build logs",
   });
 }
