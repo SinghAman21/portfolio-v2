@@ -69,6 +69,14 @@ export const contributions: OpenSourceContribution[] = [
   {
     kind: "pr",
     repo: "Graphify-Labs/graphify",
+    number: 3687,
+    title: "fix(cli): exclude deliberately declined data JSON from #2543 heal",
+    status: "open",
+    url: "https://github.com/Graphify-Labs/graphify/pull/3687",
+  },
+  {
+    kind: "pr",
+    repo: "Graphify-Labs/graphify",
     number: 2611,
     title: "fix(python): avoid crash resolving overdeep relative imports (#2605)",
     status: "merged",
@@ -81,6 +89,22 @@ export const contributions: OpenSourceContribution[] = [
     title: "fix(pipectl): fail fast on missing resources",
     status: "merged",
     url: "https://github.com/pipe-cd/pipecd/pull/7180",
+  },
+  {
+    kind: "pr",
+    repo: "kubernetes/minikube",
+    number: 23687,
+    title: "status: Fix nodes StatusCode, StatusName to show the actual status",
+    status: "merged",
+    url: "https://github.com/kubernetes/minikube/pull/23687",
+  },
+  {
+    kind: "pr",
+    repo: "kubernetes/minikube",
+    number: 23677,
+    title: "status: Fix Deleting codeNames mapping 103 → 120",
+    status: "merged",
+    url: "https://github.com/kubernetes/minikube/pull/23677",
   },
   {
     kind: "pr",

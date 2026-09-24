@@ -425,7 +425,7 @@ body {
 }
 
 .prose img {
-  @apply rounded-lg my-4;
+  @apply rounded-lg;
 }
 
 .prose figure {
