@@ -1,6 +1,7 @@
 import Anchor from '@/components/Anchor';
 import Header from '@/components/Header';
 import HomeLink from '@/components/HomeLink';
+import SiteNav from '@/components/SiteNav';
 import QuoteBlock from '@/components/QuoteBlock';
 import ReachSection from '@/components/ReachSection';
 import AnimatedSection from '@/components/AnimatedSection';
@@ -17,9 +18,11 @@ export default function Home() {
   return (
     <main className="mb-32 text-gray-700 dark:text-neutral-400">
       <KeyboardHintButton />
+      <SiteNav />
       <Header
         name="Aman Singh"
         location="Mumbai, India."
+        showResume={false}
       />
 
       <AnimatedSection delay="0.05s" className="mt-6">
