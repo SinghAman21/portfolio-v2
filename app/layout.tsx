@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import Footer from "@/components/footer/footer";
 import KeyboardNavigation from "@/components/KeyboardNavigation";
+import CursorSkeleton from "@/components/CursorSkeleton";
 import { Instrument_Serif, Geist } from "next/font/google";
 import { GeistMono } from "geist/font/mono";
 import { cn } from "@/lib/utils";
@@ -216,6 +217,7 @@ export default function RootLayout({
         <main className="flex-1 pt-24">{children}</main>
         <Footer />
         <KeyboardNavigation />
+        <CursorSkeleton />
         <SpeedInsights />
         <Analytics />
       </body>
