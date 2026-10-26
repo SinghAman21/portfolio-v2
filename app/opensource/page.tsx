@@ -1,3 +1,6 @@
+"use client";
+
+import { useState } from "react";
 import Link from "next/link";
 import {
   CircleCheck,
@@ -77,9 +80,7 @@ function OpenSourceItem({ contribution }: { contribution: OpenSourceContribution
 }
 
 export default function OpenSourcePage() {
-  const mergedCount = contributions.filter((item) => item.status === "merged").length;
-  const openCount = contributions.filter((item) => item.status === "open").length;
-  const repoCount = new Set(contributions.map((item) => item.repo)).size;
+  const [selectedRepo, setSelectedRepo] = useState<string | null>(null);
   const contributionsByRepo = contributions.reduce<
     { repo: string; items: OpenSourceContribution[] }[]
   >((groups, contribution) => {
@@ -93,6 +94,9 @@ export default function OpenSourcePage() {
     groups.push({ repo: contribution.repo, items: [contribution] });
     return groups;
   }, []);
+  const visibleContributions = selectedRepo
+    ? contributionsByRepo.filter(({ repo }) => repo === selectedRepo)
+    : contributionsByRepo;
 
   return (
     <main className="mb-32 text-gray-700 dark:text-neutral-400">
@@ -103,13 +107,48 @@ export default function OpenSourcePage() {
       />
 
       <AnimatedSection delay="0.08s" className="mb-10">
-        <p className="text-gray-600 dark:text-neutral-400 leading-relaxed">
-          {/*{contributions.length} contributions across {repoCount} repositories. {mergedCount} merged, {openCount} ongoing.*/}
-        </p>
+        <div
+          className="flex flex-wrap gap-2"
+          aria-label="Filter contributions by repository"
+        >
+          <button
+            type="button"
+            onClick={() => setSelectedRepo(null)}
+            aria-pressed={selectedRepo === null}
+            className={cn(
+              "rounded-full border px-3 py-1.5 text-sm transition-colors",
+              selectedRepo === null
+                ? "border-gray-900 bg-gray-900 text-white dark:border-neutral-100 dark:bg-neutral-100 dark:text-neutral-900"
+                : "border-gray-300 text-gray-700 hover:border-gray-500 hover:text-gray-900 dark:border-neutral-700 dark:text-neutral-300 dark:hover:border-neutral-500 dark:hover:text-white"
+            )}
+          >
+            All <span className="ml-1 opacity-70">{contributions.length}</span>
+          </button>
+          {contributionsByRepo.map(({ repo, items }) => {
+            const isSelected = selectedRepo === repo;
+
+            return (
+              <button
+                key={repo}
+                type="button"
+                onClick={() => setSelectedRepo(repo)}
+                aria-pressed={isSelected}
+                className={cn(
+                  "rounded-full border px-3 py-1.5 text-sm transition-colors",
+                  isSelected
+                    ? "border-gray-900 bg-gray-900 text-white dark:border-neutral-100 dark:bg-neutral-100 dark:text-neutral-900"
+                    : "border-gray-300 text-gray-700 hover:border-gray-500 hover:text-gray-900 dark:border-neutral-700 dark:text-neutral-300 dark:hover:border-neutral-500 dark:hover:text-white"
+                )}
+              >
+                {repo.split("/").pop()} <span className="ml-1 opacity-70">{items.length}</span>
+              </button>
+            );
+          })}
+        </div>
       </AnimatedSection>
 
       <div className="space-y-2">
-        {contributionsByRepo.map(({ repo, items }) => (
+        {visibleContributions.map(({ repo, items }) => (
           <section key={repo} className="mb-10">
             <AnimatedSection delay="0.1s" className="mb-5">
               <div className="flex items-baseline justify-between">
