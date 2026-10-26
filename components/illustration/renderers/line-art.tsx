@@ -1,0 +1,5 @@
+import { Canvas } from "./primitives";
+import type { RendererProps } from "../types";
+export default function LineArt(p: RendererProps) {
+return <Canvas {...p} label="Line art" background="#faf8f1"><g stroke="#32584e" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M100 290V90h170v200H100M185 90v200M100 190h170"/><path d="M85 373h630v17H85zM111 390v111m580-111v111"/><path d="m294 357 20-134h208l19 134H294m21-12 10-110h185l14 110H315m-30 12h266l-21 14H301zM385 361h59"/><path d="M344 263h90m-90 18h130m-130 18h82"/><rect x="585" y="279" width="37" height="74" rx="4"/><path d="M603 353v12m-17 0h35m-27-76h19m-26 63h31"/><rect x="669" y="223" width="35" height="47" rx="3"/><path d="M679 236v6m13-6v6m-11 28q1 52-58 61m74-61q21 70-156 72"/><path d="M205 360h61v-12h-61zM212 348h52v-13h-52zM322 105h46v44h-46zM402 123h46v43h-46zM347 423q0-26 24-26h81q25 0 25 26v57H347zM412 480v36m-44 12 44-12 43 12"/><path d="M136 318h99m334 90h51" strokeWidth="1"/></g><circle cx="610" cy="120" r="31" fill="none" stroke="#bf8458" strokeWidth="1.3"/><path d="M610 75v-10m0 110v-10m45-45h10m-110 0h10" stroke="#bf8458" strokeWidth="1.3"/></Canvas>;
+}

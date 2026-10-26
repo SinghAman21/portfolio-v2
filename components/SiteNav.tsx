@@ -9,6 +9,7 @@ import CornerMarkers from "@/components/CornerMarkers";
 const LINKS = [
   { href: "/", label: "home" },
   { href: "/experience", label: "experience" },
+  { href: "/workspace", label: "workspace" },
   { href: "/blog", label: "blog" },
   { href: "/resume", label: "resume" },
 ];

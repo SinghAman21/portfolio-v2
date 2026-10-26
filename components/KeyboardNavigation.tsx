@@ -14,6 +14,7 @@ const routes: Route[] = [
   { path: '/', label: 'Home', key: 'H' },
   { path: '/experience', label: 'Experience', key: 'E' },
   { path: '/projects', label: 'Projects', key: 'P' },
+  { path: '/workspace', label: 'Workspace', key: 'W' },
   { path: '/blog', label: 'Blog', key: 'B' },
   { path: '/opensource', label: 'Open Source', key: 'O' },
   { path: '/about', label: 'About', key: 'A' },
