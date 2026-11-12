@@ -93,7 +93,7 @@ export const projects = [
 export const Experience = [
   {
     title: "Software Engineer Intern",
-    year: "Jun 2026 - Present",
+    year: "Jun 2026 - July 2026",
     company: "Artifexone",
     description: [
       "Fully owned Taolatt Real Estate CRM, shipping 23 full-stack features from backend APIs to React interfaces while defining engineering standards that scaled the platform.",

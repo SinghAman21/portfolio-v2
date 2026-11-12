@@ -46,7 +46,7 @@ export const resumeWorkExperience: WorkExperienceItem[] = [
     company: "Artifexone",
     title: "Software Engineer Intern",
     location: "Remote",
-    period: "Jun 2026 - Present",
+    period: "Jun 2026 - July 2026",
     points: [
       "• Fully owned Taolatt Real Estate CRM, shipping 23 full-stack features from backend APIs to React interfaces while defining engineering standards that scaled the platform.",
       "• Built a reusable React component library with shadcn/ui, React Hook Form, and Zod, supporting scalable state management, filtering, infinite scroll, and multi-select workflows.",
