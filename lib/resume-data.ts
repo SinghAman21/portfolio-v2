@@ -40,12 +40,18 @@ export interface EducationItem {
   period: string;
 }
 
+export interface CertificationItem {
+  name: string;
+  score: string;
+  verificationUrl: string;
+}
+
 // Transform Experience data for resume
 export const resumeWorkExperience: WorkExperienceItem[] = [
   {
-    company: "Artifexone",
+    company: "ArtifexOne",
     title: "Software Engineer Intern",
-    location: "Remote",
+    location: "Barcelona, Spain (Remote)",
     period: "Jun 2026 - July 2026",
     points: [
       "• Fully owned Taolatt Real Estate CRM, shipping 23 full-stack features from backend APIs to React interfaces while defining engineering standards that scaled the platform.",
@@ -56,7 +62,7 @@ export const resumeWorkExperience: WorkExperienceItem[] = [
   {
     company: "Actrun",
     title: "Backend Engineer Intern",
-    location: "Remote",
+    location: "Maryland, US (Remote)",
     period: "Feb 2026 - Jun 2026",
     points: [
       "• Built a deterministic attachment pipeline for chat/Slack, hydrating images/PDFs/text directly into LLM context.",
@@ -64,21 +70,11 @@ export const resumeWorkExperience: WorkExperienceItem[] = [
       "• Fixed intermittent Postgres SSL drops with retry-with-backoff logic, and resolved OAuth/WebSocket issues across X, LinkedIn, and Slack integrations.",
     ],
   },
-  {
-    company: "Vidyalankar Institute of Technology",
-    title: "Cloud Security Research Intern",
-    location: "Mumbai, Maharashtra",
-    period: "December 2025 - February 2026",
-    points: [
-      "• Reverse-engineered vulnerable AWS infra (public RDS/S3, plaintext creds); Terraform-hardened to private subnets, ALB TLS, KMS encryption, Secrets Manager—100% attack sim mitigation.",
-      "• Built prod-grade Node.js+PostgreSQL AWS stack: custom IAM (prefix-specific S3/KMS), EB/RDS isolation, GuardDuty+CloudTrail logging, <5min reproducible deployments.",
-      "• Simulated SQLi/priv-esc attacks; validated via tf plan, CW alarms, Config rules—achieving compliant, drift-proof infrastructure.",
-    ],
-  },
+
   {
     company: "EasLegal Partners",
     title: "Full Stack Developer Intern",
-    location: "Remote",
+    location: "Bengaluru, India (Remote)",
     period: "September 2025-December 2025",
     points: [
       "• Developed production-grade code and a user-friendly interface to enhance user experience",
@@ -90,6 +86,26 @@ export const resumeWorkExperience: WorkExperienceItem[] = [
 
 export const resumeProjects: ProjectItem[] = [
   {
+    title: "Nabhya",
+    techStack:
+      "(NestJS 11, TypeScript, Supabase, Drizzle ORM, Expo , React Native, TanStack Query, Zustand, Axios, Zod, Razorpay, Resend, Vitest, k6, Biome, Turborepo)",
+    points: [
+      "• Built Nabhya’s backend to power a trusted NGO–volunteer platform.",
+      "• Learned to turn complex product requirements into secure, scalable, and reliable backend systems.",
+      "• Created a personalized feed-ranking engine that matches volunteers with relevant opportunities in real time.",
+    ],
+  },
+  {
+    title: "Santra",
+    techStack:
+      "(React 19, TypeScript, Vite, Tailwind CSS, shadcn, Tauri 2, Rust, Tokio, FFmpeg, Poppler, qpdf, Pandoc, ExifTool, test runner, Playwright)",
+    points: [
+      "• Built a sub-10 MB Windows and Linux desktop app with snappy file conversion and ready-to-use tools using near-zero memory.",
+      "• Owned the full product lifecycle—from idea, documentation, design, and prototyping to engineering and production delivery.",
+      "• Its a fast, privacy-first workflow that feels nearly weightless while handling real file operations locally.",
+    ],
+  },
+  {
     title: "SilentParcel",
     techStack:
       "(Next.js, TypeScript, Tailwind CSS, Shadcn UI, Github Actions, Supabase, Appwrite)",
@@ -97,35 +113,6 @@ export const resumeProjects: ProjectItem[] = [
       "• Built a end-to-end encrypted file sharing application that disappears without a trace.",
       "• Implements AES-256 end-to-end encryption for files and chats, ensuring military-grade security without registration.",
       "• Offers ephemeral anonymous chat rooms with real-time messaging, collaborative code editing, and WebRTC support for up to 10+ languages. Selected as Staff Picked Project of the Day on Peerlist.",
-    ],
-  },
-  {
-    title: "Graphex",
-    techStack:
-      "(Next.js, TypeScript, Tailwind CSS, tRPC, Prisma, Github OAuth, Shadcn UI, Resend, DodoPayments)",
-    points: [
-      "• Integrates with GitHub via secure OAuth, enabling seamless connection of your account using GraphQL API without sharing credentials.",
-      "• Implemented an automated notification system with email and browser push notifications (Web Push API/VAPID), scheduled via cron jobs, with timezone-aware delivery management.",
-      "• Architected a scalable backend with tRPC type-safe API routes, server-side rendering, scheduled cron jobs for daily reminders, and a subscription-based billing system with free trial management, deployed to production.",
-    ],
-  },
-  {
-    title: "PeakMark",
-    techStack:
-      "(Next.js, React Query, Turbo Repo, S3, Vercel Deployment, tRPC, TypeScript)",
-    points: [
-      "• Built a web application for creating and exporting SVG badges for Project Showcase and READMEs using Next.js 16, tRPC, and TypeScript. Features include a real-time preview, 6+ badge presets, and a dynamic icon picker.",
-      "• Created a high-performance monorepo with Turborepo, incorporating an isolated API layer, database, and shared packages. Used tRPC for type-safe communication and optimized the build pipeline. Deployed on Vercel with analytics.",
-      "• Implemented query-based badge generation for shareable URLs and one-click exports, allowing segment-level customization. Developed a preset gallery for rapid iteration.",
-    ],
-  },
-  {
-    title: "SVG Preview (vs-code/cursor extension)",
-    techStack: "(TypeScript, VS Code API)",
-    points: [
-      "• Built SVG Preview, a browser-based tool to instantly render and inspect SVG files directly from local uploads or pasted SVG code, improving designer–developer collaboration.",
-      "• Implemented a responsive, minimal UI with live preview so developers can quickly iterate on SVG icons, logos, and illustrations without opening heavy design tools.",
-      "• Published SVG Preview as a VS Code extension on the official Marketplace and Cursor extension directory, enabling millions of developers to instantly render and inspect SVGs within their IDE.",
     ],
   },
 ];
@@ -144,6 +131,21 @@ export const technicalSkills: TechnicalSkillsData = {
   systemDesign:
     "Microservices, Distributed Systems, System Design, Caching, Message Queues (BullMQ), API Design, Scalability, Load Balancing",
 };
+
+export const certifications: CertificationItem[] = [
+  {
+    name: "AWS Certified Cloud Practitioner",
+    score: "Score: 898/1000",
+    verificationUrl:
+      "https://cp.certmetrics.com/amazon/en/public/verify/credential/cbe562c3afff4d9d91f786d5338989fe",
+  },
+  {
+    name: "AWS Certified AI Practitioner",
+    score: "Score: 929/1000",
+    verificationUrl:
+      "https://cp.certmetrics.com/amazon/en/public/verify/credential/82901d854e8a4e9faa41b1ddec6e4cf2",
+  },
+];
 
 export const volunteerExperience: VolunteerExperienceItem = {
   organization: "GDG VIT",

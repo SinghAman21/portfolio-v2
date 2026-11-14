@@ -13,6 +13,7 @@ import {
   resumeProjects,
   volunteerExperience,
   technicalSkills,
+  certifications,
   education,
 } from "@/lib/resume-data";
 
@@ -34,7 +35,10 @@ export default function ResumePage() {
 
         <VolunteerExperienceSection experience={volunteerExperience} />
 
-        <TechnicalSkillsSection skills={technicalSkills} />
+        <TechnicalSkillsSection
+          skills={technicalSkills}
+          certifications={certifications}
+        />
 
         <EducationSection education={education} />
       </div>

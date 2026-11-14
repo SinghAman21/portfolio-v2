@@ -39,7 +39,13 @@ export default function ProjectItem({ title, description, demoUrl, githubUrl }: 
         </div>
       </div>
 
-      <p className="text-gray-600 dark:text-neutral-400 mb-2">{description}</p>
+      <p className="text-gray-600 dark:text-neutral-400 mb-2">
+        {description.split("\n").map((point, index) => (
+          <span key={index} className="block">
+            {point.trim()}
+          </span>
+        ))}
+      </p>
     </div>
   )
-} 
+}
